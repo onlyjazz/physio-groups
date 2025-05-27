@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Physiotherapy Modiin</title>
+
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+
+
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+
+	<body>
+		<div class="page">
+			<header class="page-header">
+				<div class="grid-row">
+					<div class="grid-col grid-col_12">
+						<div class="logo">Physiotherapy Modiin</div>
+					</div>
+					<div class="grid-col grid-col_12 tar fs0">
+						<div class="top-nav">
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">notifications</a>
+								<i class="top-nav__count">3</i>
+							</div>
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">menu</a>
+								<div class="top-nav__drop">
+									<a href="#">Profile</a>
+									<a href="#" data-ref="#popup-settings" class="js-popup-opener">Settings</a>
+									<a href="#">Help and Support</a>
+									<a href="index.html">Logout</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</header>
+
+
+			<aside class="page-aside">
+				<div class="main-nav">
+					<a href="groups.html" class="main-nav__item"><i class="material-icons">dashboard</i>Groups</a>
+					<hr class="main-nav__sep">
+					<a href="Therapists.html" class="main-nav__item main-nav__item_active"><i class="material-icons">assignment</i>Therapists</a>
+					<hr class="main-nav__sep">
+					<a href="patients.html" class="main-nav__item"><i class="material-icons">people</i>Patients</a>
+				</div>
+			</aside>
+
+
+			<main class="page-content">
+				<div class="page-title">
+					<a href="therapist-add.html" class="button button_green">Add new therapist</a>
+					<h1 class="heading heading_1">Therapists</h1>
+				</div>
+
+
+				<div class="grid-row">
+					<div class="grid-col grid-col_6">
+						<div class="filters card">
+							<div class="heading heading_3">Filters</div>
+							<div class="input">
+								<input type="text" class="input__text">
+								<label class="input__label">Search by name</label>
+							</div>
+							<div class="input input_date">
+								<input type="text" class="input__text">
+								<label class="input__label">Period</label>
+								<i class="material-icons">date_range</i>
+							</div>
+							<div class="input input_select">
+								<select class="input__text input__text_changed">
+									<option selected> All</option>
+									<option>Boston ABC</option>
+									<option>Houston ABC</option>
+								</select>
+								<label class="input__label">Group</label>
+							</div>
+							<div class="input input_select">
+								<select class="input__text input__text_changed">
+									<option selected> All</option>
+									<option>Consectetuer adipiscing</option>
+									<option>Aenean commodo</option>
+									<option>Aenean massa</option>
+									<option>Natoque penatibus</option>
+								</select>
+								<label class="input__label">Therapists</label>
+							</div>
+							<div class="input input_select">
+								<select class="input__text input__text_changed">
+									<option selected> All</option>
+									<option>Ligula eget</option>
+									<option>Cum sociis</option>
+									<option>Magnis</option>
+									<option>Elit</option>
+								</select>
+								<label class="input__label">PI's</label>
+							</div>
+							<button type="submit" class="button button_blocked button_flat">Apply</button>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_18">
+						<div class="groups card">
+							<div class="grid-row">
+								<div class="grid-col grid-col_12">
+									<div class="heading heading_3">All Therapists</div>
+								</div>
+								<div class="grid-col grid-col_12 tar">
+									<div class="button button_s button_flat">
+										Actions <i class="material-icons">keyboard_arrow_down</i>
+										<select class="input__text input__text_changed">
+											<option></option>
+											<option>Update</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="table">
+								<table>
+									<tr>
+										<th class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></th>
+										<th class="tal"><a href="#" class="table__sort">Name</a></th>
+										<th class="tal"><a href="#" class="table__sort">PI</a></th>
+										<th class="tar"><a href="#" class="table__sort">Forms</a></th>
+										<th class="tar"><a href="#" class="table__sort">Screened</a></th>
+										<th class="tar"><a href="#" class="table__sort">Enrolled</a></th>
+										<th class="tar"><a href="#" class="table__sort">Dropuots</a></th>
+										<th class="tar"><a href="#" class="table__sort table__sort_down">Other</a></th>
+									</tr>
+									<tr data-href="Therapist-profile.html">
+										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tal">LA Bio Research Labs</td>
+										<td class="tal">Paul Radin</td>
+										<td class="tar c_red">4/10</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">160</td>
+									</tr>
+									<tr data-href="Therapist-profile.html">
+										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tal">Houston Bio</td>
+										<td class="tal">Gary Smith</td>
+										<td class="tar">7/10</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">3/20</td>
+										<td class="tar c_red">144</td>
+									</tr>
+									<tr data-href="Therapist-profile.html">
+										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tal">Boston Bio</td>
+										<td class="tal">Jon Hart</td>
+										<td class="tar">9/10</td>
+										<td class="tar">13/20</td>
+										<td class="tar">0/20</td>
+										<td class="tar">0/20</td>
+										<td class="tar c_red">56</td>
+									</tr>
+
+
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+
+		<script src="js/jquery-3.2.0.min.js"></script>
+		<script src="js/jquery-ui.min.js"></script>
+		<script src="js/slick.min.js"></script>
+		<script src="js/main.js"></script>
+	</body>
+</html>

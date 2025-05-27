@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Physiotherapy Modiin</title>
+
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+
+
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+
+	<body>
+		<div class="page">
+			<header class="page-header">
+				<div class="grid-row">
+					<div class="grid-col grid-col_12">
+						<div class="logo">Physiotherapy Modiin</div>
+					</div>
+					<div class="grid-col grid-col_12 tar fs0">
+						<div class="top-nav">
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">notifications</a>
+								<i class="top-nav__count">3</i>
+							</div>
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">menu</a>
+								<div class="top-nav__drop">
+									<a href="#">Profile</a>
+									<a href="#" data-ref="#popup-settings" class="js-popup-opener">Settings</a>
+									<a href="#">Help and Support</a>
+									<a href="index.html">Logout</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</header>
+
+
+			<aside class="page-aside">
+				<div class="main-nav">
+					<a href="groups.html" class="main-nav__item"><i class="material-icons">dashboard</i>Groups</a>
+					<hr class="main-nav__sep">
+					<a href="Therapists.html" class="main-nav__item"><i class="material-icons">assignment</i>Therapists</a>
+					<hr class="main-nav__sep">
+					<a href="patients.html" class="main-nav__item main-nav__item_active"><i class="material-icons">people</i>Patients</a>
+				</div>
+			</aside>
+
+
+			<main class="page-content">
+				<div class="page-title">
+					<a href="patient-add.html" class="button button_green">Register new patient</a>
+					<h1 class="heading_1">Patients</h1>
+				</div>
+
+
+				<div class="grid-row">
+					<div class="grid-col grid-col_6">
+						<div class="filters card">
+							<div class="heading heading_3">Filters</div>
+							<div class="input">
+								<input type="text" class="input__text">
+								<label class="input__label">Search by name</label>
+							</div>
+							<div class="input input_select">
+								<select class="input__text input__text_changed">
+									<option selected> All</option>
+									<option>Mobile medical device group, neurology</option>
+									<option>Runsafer shoe group</option>
+									<option>Psychiatric dosing group</option>
+									<option>Gastro group</option>
+									<option>Epigenetics cancer detection</option>
+								</select>
+								<label class="input__label">Group</label>
+							</div>
+							<div class="input input_select">
+								<select class="input__text input__text_changed">
+									<option selected> All</option>
+									<option>Barcelona</option>
+									<option>Valencia</option>
+									<option>Odessa</option>
+									<option>Berlin</option>
+								</select>
+								<label class="input__label">Site</label>
+							</div>
+							<button type="submit" class="button button_blocked button_flat">Apply</button>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_18">
+						<div class="groups card">
+							<div class="grid-row">
+								<div class="grid-col grid-col_12">
+									<div class="heading heading_3">All patients</div>
+								</div>
+								<div class="grid-col grid-col_12 tar">
+									<div class="button button_s button_flat">
+										Actions<i class="material-icons">keyboard_arrow_down</i>
+										<select class="input__text input__text_changed">
+											<option></option>
+											<option>Delete</option>
+											<option>Download patients</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="table">
+								<table>
+									<tr>
+										<th class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></th>
+										<th class="tal"><a href="#" class="table__sort table__sort_down">Name</a></th>
+										<th class="tal"><a href="#" class="table__sort">Role</a></th>
+										<th class="tar"><a href="#" class="table__sort">Group</a></th>
+										<th class="tar"><a href="#" class="table__sort">Site</a></th>
+									</tr>
+									<tr data-href="user-profile.html">
+										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tal">Dr. Mira Radisky</td>
+										<td class="tal">Principal Investigator</td>
+										<td class="tar">2</td>
+										<td class="tar">1</td>
+									</tr>
+									<tr data-href="user-profile.html">
+										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tal">Catherine Wolcott-Jones</td>
+										<td class="tal">Clinical Research Coordinator</td>
+										<td class="tar">1</td>
+										<td class="tar">1</td>
+									</tr>
+
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+
+
+			<footer class="page-footer">
+			</footer>
+		</div>
+
+
+		<script src="js/jquery-3.2.0.min.js"></script>
+		<script src="js/jquery-ui.min.js"></script>
+		<script src="js/slick.min.js"></script>
+		<script src="js/main.js"></script>
+	</body>
+</html>

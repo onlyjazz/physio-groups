@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Physiotherapy Modiin</title>
+
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+
+
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+
+	<body>
+		<div class="page">
+			<header class="page-header">
+				<div class="grid-row">
+					<div class="grid-col grid-col_12">
+						<div class="logo">Physiotherapy Modiin</div>
+					</div>
+					<div class="grid-col grid-col_12 tar fs0">
+						<div class="top-nav">
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">notifications</a>
+								<i class="top-nav__count">3</i>
+							</div>
+							<div class="top-nav__item">
+								<a href="#" class="top-nav__link material-icons">menu</a>
+								<div class="top-nav__drop">
+									<a href="#">Profile</a>
+									<a href="#" data-ref="#popup-settings" class="js-popup-opener">Settings</a>
+									<a href="#">Help and Support</a>
+									<a href="index.html">Logout</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</header>
+
+
+			<aside class="page-aside">
+				<div class="main-nav">
+					<a href="groups.html" class="main-nav__item main-nav__item_active"><i class="material-icons">dashboard</i>Groups</a>
+					<hr class="main-nav__sep">
+					<a href="Therapists.html" class="main-nav__item"><i class="material-icons">assignment</i>Therapists</a>
+					<hr class="main-nav__sep">
+					<a href="patients.html" class="main-nav__item"><i class="material-icons">people</i>Patients</a>
+					<hr class="main-nav__sep">
+					<a href="rules.html" class="main-nav__item"><i class="material-icons">swap_calls</i>Rules</a>
+				</div>
+			</aside>
+
+
+			<main class="page-content">
+				<div class="bread-crumbs">
+					<a href="groups.html" class="text-link text-link_blue">Groups</a>
+					&nbsp;/&nbsp;
+					<span>Group profile</span>
+				</div>
+
+
+				<div class="page-title">
+					<div class="grid-row">
+						<div class="grid-col grid-col_24">
+
+							<a href="edit-group.html" class="button button_blue">Edit study</a>
+
+							<h1 class="heading heading_1">Runsafer Shoes group profile</h1>
+						</div>
+					</div>
+				</div>
+
+
+				<div class="grid-row">
+					<div class="grid-col grid-col_8">
+						<div class="summary card">
+							<div class="card__heading heading heading_3">NCT03115437</div>
+							<dl>
+								<dt>Status:</dt>
+								<dd>open</dd>
+								<dt>PI:</dt>
+								<dd>Laurent Malisoux, PhD</dd>
+								<dt>Enrollment target:</dt>
+								<dd>3000</dd>
+								<dt>Group type:</dt><dd>Observational</dd>
+								<dt>Primary purpose:</dt><dd>Prevention</dd>
+								<dt>Group phase:</dt><dd>Phase III</dd>
+								<dt>Interventional group model:</dt><dd>Single arm</dd>
+								<dt>Opened:</dt>
+								<dd>07/03/2017</dd>
+							</dl>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_16">
+						<div class="summary card">
+							<div class="card__heading heading heading_3">Purpose</div>
+							<p>
+								The main goal is to investigate the influence of shoe cushioning and body mass on the risk of running-related injury. This group will allow to determine if shoe cushioning needs to be adapted to the mass of the runner in order to minimize injury risk. The influence of shoe cushioning on running technique will also be investigated.
+								<br><br>
+								This group consists in a 6-month follow-up period during which leisure-time runners are required to perform a running activity at least once a week and to upload all their running as well as other sporting activities onto a secured web-based training calendar named "Training and Injury Prevention Platform for Sports" (TIPPS) on a weekly basis. Any injury sustained during this period should also be uploaded onto the TIPPS system using the injury questionnaire provided on the website. Finally, the day of the visit to the laboratory (study start), their running style will be analysed during a 15-minute run on an instrumented treadmill at the participant's usual running speed. Anthropometric measurements will also taken.
+								<br><br>
+								Before the beginning of the group, the participants will receive a pair of running shoes free of charge.
+								<br><br>
+								These shoes will contain a device. The device consists of a microelectronic measuring system capable of gathering biomechanical parameters that characterise the runner's technique during a race. This information is wirelessly transmitted to the runner's mobile phone and a mobile phone application provides real-time feedback, including level of performance and suggestions to change the running pattern or to stop running in case of detecting a high risk of injury.
+The mobile app also has all the additional information provided by other commercial devices commonly used by runners such as heart rate monitor or GPS location.
+							</p>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_12">
+						<div class="groups card">
+							<div class="heading heading_3">Alert rules</div>
+
+							<div class="table">
+								<table>
+									<tr data-href="rule-al-profile.html">
+										<th class="tal"><a href="#" class="table__sort table__sort_down">Date</a></th>
+										<th class="tal"><a href="#">Symptom</a></th>
+										<th class="tar"><a href="#">Metric</a></th>
+										<th class="tar"><a href="#">Threshold</a></th>
+									</tr>
+									<tr data-href="rule-al-profile.html">
+										<td class="tal">12/3/17</td>
+										<td class="tal">Device: Failed to sync running data to portal</td>
+										<td class="tar">Retries</td>
+										<td class="tar">>=10</td>
+									</tr>
+									<tr data-href="rule-al-profile.html">
+										<td class="tal">2/4/17</td>
+										<td class="tal">Device: Device to phone BLE connectivity lost</td>
+										<td class="tar">Disconnects</td>
+										<td class="tar">>=5</td>
+									</tr>
+									<tr data-href="rule-al-profile.html">
+										<td class="tal">2/4/17</td>
+										<td class="tal">Subject: Low step frequency at baseline</td>
+										<td class="tar">Steps</td>
+										<td class="tar"> < 120 </td>
+									</tr>
+
+									<tr data-href="rule-al-profile.html">
+										<td class="tal">3/4/17</td>
+										<td class="tal">Site: Low recruitment rate</td>
+										<td class="tar">Subjects/week</td>
+										<td class="tar"><=50</td>
+									</tr>
+									<tr data-href="rule-al-profile.html">
+										<td class="tal">4/4/17</td>
+										<td class="tal">ePRO: Slow reporting</td>
+										<td class="tar">No Pros/week</td>
+										<td class="tar">< 3</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_12">
+						<div class="groups card">
+							<div class="heading heading_3">Analytics rules</div>
+
+							<div class="table">
+								<table>
+									<tr>
+										<th class="tal"><a href="#" class="table__sort table__sort_down">Date</a></th>
+										<th class="tal"><a href="#">Symptom</a></th>
+										<th class="tar"><a href="#">Metric</a></th>
+										<th class="tar"><a href="#">Graph</a></th>
+									</tr>
+									<tr data-href="rule-an-profile.html">
+										<td class="tal">1/3/17</td>
+										<td class="tal">Contact time at baseline</td>
+										<td class="tar">ms</td>
+										<td class="tar">Bar</td>
+									</tr>
+									<tr data-href="rule-an-profile.html">
+										<td class="tal">2/3/17</td>
+										<td class="tal">Site recruitment stats</td>
+										<td class="tar">No. Subjects</td>
+										<td class="tar">Pie</td>
+									</tr>
+									<tr data-href="rule-an-profile.html">
+										<td class="tal">12/3/17</td>
+										<td class="tal">Step frequency at baseline</td>
+										<td class="tar">Steps/minute</td>
+										<td class="tar">Bar</td>
+									</tr>
+									<tr data-href="rule-an-profile.html">
+										<td class="tal">12/4/17</td>
+										<td class="tal">Adverse events/site</td>
+										<td class="tar">First running-related musculoskeletal pain </td>
+										<td class="tar">Pie</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_12">
+						<div class="comments card">
+							<div class="heading heading_3">2 comments</div>
+							<p>Do Foot and Tibia Angles Affect Loading Impact Rates? Can the device infer this?</p>
+							<p class="comments__author tar">by <a href="#" class="text-link text-link_blue">Laurent</a> 5 days ago</p>
+							<hr>
+							<p>Runners report lesions and we may detect improved training management as measured by PROs the runner reports, can we detect improvements in compliance and lesion reduction?</p>
+							<p class="comments__author tar">by <a href="#" class="text-link text-link_blue">Laurent</a> 8 hours ago</p>
+							<hr>
+							<div class="comments__add">
+								<div class="input">
+									<input type="text" class="input__text">
+									<label class="input__label">Text of the comment</label>
+								</div>
+								<div class="tar"><button type="submit" class="button button_flat">Add comment</button></div>
+							</div>
+						</div>
+					</div>
+
+
+					<div class="grid-col grid-col_12">
+						<div class="groups card">
+							<div class="heading heading_3">Group patients</div>
+							<div class="table">
+								<table>
+									<tbody>
+										<tr>
+											<th class="tal"><a href="#" class="table__sort table__sort_down">Name</a></th>
+											<th class="tal"><a href="#">Username</a></th>
+											<th class="tal"><a href="#">Role</a></th>
+											<th class="tal"><a href="#">E-mail</a></th>
+										</tr>
+										<tr>
+											<td class="tal">Laurent.Malisoux</td>
+											<td class="tal">Laurent Malisoux</td>
+											<td class="tal">PI</td>
+											<td class="tal">laurent.malisoux@kelme.es</td>
+										</tr>
+										<tr>
+											<td class="tal">Julia.Garcia</td>
+											<td class="tal">Julia Garcia</td>
+											<td class="tal">CRA</td>
+											<td class="tal">julia.garcia@kelme.es</td>
+										</tr>
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+
+		<div id="popup-edit" class="popup">
+			<div class="tbl">
+				<div class="tcl">
+					<div class="popup__window card">
+						<button type="button" class="card__close material-icons js-popup-closer">close</button>
+						<div class="card__heading heading heading_3">Edit profile</div>
+						<div class="grid-row">
+							<div class="grid-col grid-col_12">
+								<div class="input input_select">
+									<select class="input__text input__text_changed">
+										<option selected>Opened</option>
+										<option>Closed</option>
+										<option>Paused</option>
+									</select>
+									<label class="input__label">Status</label>
+								</div>
+							</div>
+							<div class="grid-col grid-col_12">
+								<div class="input input_select">
+									<select class="input__text input__text_changed">
+										<option selected>John Doe</option>
+										<option>Sam Smith</option>
+										<option>Jenifer Law</option>
+									</select>
+									<label class="input__label">PI</label>
+								</div>
+							</div>
+						</div>
+						<div class="grid-row">
+							<div class="grid-col grid-col_8">
+								<div class="input">
+									<input type="text" value="100" class="input__text input__text_changed">
+									<label class="input__label">Enrollment target</label>
+								</div>
+							</div>
+							<div class="grid-col grid-col_8">
+								<div class="input">
+									<input type="text" value="single arm" class="input__text input__text_changed">
+									<label class="input__label">Group type</label>
+								</div>
+							</div>
+							<div class="grid-col grid-col_8">
+								<div class="input">
+									<input type="text" value="07/07/2017" class="input__text input__text_changed">
+									<label class="input__label">Opened</label>
+								</div>
+							</div>
+						</div>
+						<div class="tar">
+							<button type="submit" class="button js-popup-closer">Save changes</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div id="popup-edit-2" class="popup">
+			<div class="tbl">
+				<div class="tcl">
+					<div class="popup__window card">
+						<button type="button" class="card__close material-icons js-popup-closer">close</button>
+						<div class="card__heading heading heading_3">Edit summary</div>
+						<div class="grid-row">
+							<div class="grid-col grid-col_24">
+								<div class="input">
+									<textarea rows="9" cols="9" class="input__text input__text_changed">
+The main goal is to investigate the influence of shoe cushioning and body mass on the risk of running-related injury.
+
+This group will allow to determine if shoe cushioning needs to be adapted to the mass of the runner in order to minimize injury risk. The influence of shoe cushioning on running technique will also be investigated.
+
+															This group consists in a 6-month follow-up period during which leisure-time runners are required to perform a running activity at least once a week and to upload all their running as well as other sporting activities onto a secured web-based training calendar named "Training and Injury Prevention Platform for Sports" (TIPPS) on a weekly basis. Any injury sustained during this period should also be uploaded onto the TIPPS system using the injury questionnaire provided on the website.
+
+															Finally, the day of the visit to the laboratory (group start), their running style will be analysed during a 15-minute run on an instrumented treadmill at the participant's usual running speed. Anthropometric measurements will also taken.
+
+															Before the beginning of the group, the participants will receive a pair of running shoes free of charge.
+
+															These shoes will contain a device. The device consists of a microelectronic measuring system capable of gathering biomechanical parameters that characterise the runner's technique during a race. This information is wirelessly transmitted to the runner's mobile phone and a mobile phone application provides real-time feedback, including level of performance and suggestions to change the running pattern or to stop running in case of detecting a high risk of injury.
+
+							The mobile app also has all the additional information provided by other commercial devices commonly used by runners such as heart rate monitor or GPS location.
+														</textarea>
+									<label class="input__label">Purpose</label>
+								</div>
+							</div>
+						</div>
+						<div class="tar">
+							<button type="submit" class="button js-popup-closer">Save changes</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<script src="js/jquery-3.2.0.min.js"></script>
+		<script src="js/jquery-ui.min.js"></script>
+		<script src="js/slick.min.js"></script>
+		<script src="js/main.js"></script>
+	</body>
+</html>
