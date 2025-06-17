@@ -1,46 +1,24 @@
-
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="he" dir="rtl">
 <head>
-            <meta charset="UTF-8">
-            <title>Physio Groups Mgmt POC Rev 3 (no module) </title>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <meta charset="UTF-8">
+  <title>Phizio groups</title>
+
+  <!-- Google Fonts import -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Noto Sans Hebrew', sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+    }
+  </style>
 </head>
 <body>
-<h3>SQLite demo rev 3 in browser safe version</h3>
-<button id="save">Save Patients in groups DB</button>
-<script> alert( " Ln 13" ) </script>
-<script>
-            alert( "ln 15");
-            function runApp(SQL) {
-            var db = new SQL.Database();
-            db.run("CREATE TABLE patient (id INT, name TEXT); ");
-            db.run("INSERT into patient VALUES (?,?);", [1, "Bob"]);
-            db.run("INSERT into patient VALUES (?,?);", [2, "Alice"]);
-            var button = document.getElementById("save")
-              button.addEventListener("click", function() {
-                        var binaryArray = db.export();
-                        var blob = new Blob([binaryArray], {type: "application/octet-stream"});
-                        var url = URL.createObjectURL(blob);
-                        var a = document.createElement("a");
-                        a.href=url;
-                        a.download = "patient.sqlite";
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        URL.revokeObjectURL(url);
-               });
-            }
-
-            // Initialize sql.js with locateFile fallback
-            window.initSqlJs ({
-              locateFile: function (file) {
-              return "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/" + file;
-              }
-            }).then(runApp).catch(function (err) {
-              alert("SQL.js init error: "+ err.message);
-            });
-</script>
+  <h3>פיזיותרפיה קבוצות מחוץ לסל</h3>
+<p><a href="groups.html">Phizio groups</a></p>
+  <button>שמור</button>
 </body>
 </html>
 

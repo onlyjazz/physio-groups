@@ -10,7 +10,7 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700');
 @import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400');
-
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap');
 
 /**/
 /* reset */
@@ -65,6 +65,123 @@ html, body {
 	color: rgba(0,0,0,0.54);
 	color: rgba(0,0,0,0.87);
 }
+
+/* Hebrew-specific font and RTL support */
+:lang(he) {
+    font-family: 'Noto Sans Hebrew', sans-serif;
+    font-weight: 400;
+}
+
+/* Base font size for body text in Hebrew */
+:lang(he) body {
+    font-size: 24px;
+}
+
+/* Table headers match cells in Hebrew */
+:lang(he) th,
+:lang(he) .table__sort {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.87);
+}
+
+/* RTL text alignment */
+[dir="rtl"] {
+    text-align: right;
+}
+
+/* Material Icons Base Styles */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fix for material icons in RTL */
+[dir="rtl"] .material-icons {
+    direction: ltr;
+}
+
+/* Fix for input elements */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+    text-align: right;
+}
+
+/* Fix for buttons with icons */
+[dir="rtl"] .button .material-icons {
+    margin-left: 8px;
+    margin-right: 0;
+    vertical-align: middle;
+}
+
+/* Fix for grid system in RTL */
+[dir="rtl"] .grid-row {
+    margin: 0 -1rem;
+}
+
+[dir="rtl"] .grid-col {
+    float: right;
+}
+
+/* Fix for navigation */
+[dir="rtl"] .top-nav {
+    float: left;
+}
+
+[dir="rtl"] .top-nav__item {
+    float: right;
+    margin-left: 15px;
+    margin-right: 0;
+}
+
+/* Fix for dropdown menus */
+[dir="rtl"] .top-nav__drop {
+    right: auto;
+    left: 0;
+    text-align: right;
+}
+
+/* Fix for form elements */
+[dir="rtl"] .input__label {
+    right: 0;
+    left: auto;
+}
+
+[dir="rtl"] .input__text {
+    padding-right: 0;
+    padding-left: 10px;
+}
+
+/* Fix for card layouts */
+[dir="rtl"] .card {
+    text-align: right;
+}
+
+/* Fix for buttons with icons */
+[dir="rtl"] .button i.material-icons {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
 html {
 	overflow-y: scroll;
 }
@@ -527,6 +644,7 @@ a.flask-link {
 	resize: none;
 	-moz-appearance: none;
 	-webkit-appearance: none;
+	appearance: none;
 }
 .input_date .input__label, .input_date  .input__text, .input_time {
 	overflow: hidden;
@@ -616,6 +734,9 @@ a.flask-link {
 	padding-left: 18px;
 	cursor: pointer;
 	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 .checkbox i {
 	position: absolute;
@@ -725,6 +846,7 @@ a.flask-link {
 	color: rgba(0,0,0,0.87);
 	-moz-appearance: none;
 	-webkit-appearance: none;
+	appearance: none;
 }
 
 .token-input-dropdown {
@@ -906,7 +1028,7 @@ a.flask-link {
 
 /**/
 /* page */
-/**/
+
 .page-header {
 	position: fixed;
 	z-index: 4;
@@ -947,11 +1069,27 @@ a.flask-link {
 }
 .page-title {
 	margin-bottom: 32px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+[dir="rtl"] .page-title {
+	text-align: right;
 }
 .page-title .button {
-	float: right;
-	margin-top: 6px;
-	margin-left: 4px;
+	order: 1;
+	margin: 0;
+}
+[dir="rtl"] .page-title .button {
+	order: 1;
+}
+.page-title h1 {
+	order: 2;
+	margin: 0;
+}
+[dir="rtl"] .page-title h1 {
+	order: 2;
+	margin-right: auto;
 }
 .page-title .grid-col {
 	vertical-align: middle;
@@ -1219,19 +1357,19 @@ table.table {
 	table-layout: fixed;
 	width: 100%;
 }
-table.table td, th .DataTables_sort_wrapper {
+table.table td, th .DataTables_sort_wrapper,
+.table th {
 	overflow: hidden;
-	text-overflow: ellipsis ;
+	text-overflow: ellipsis;
 }
 .table th {
 	padding: 14px 0 14px 24px;
-	font-size: 12px;
-	line-height: 18px;
-	font-weight: 500;
-	color: rgba(0,0,0,0.54);
-}
-.table th:last-child {
-	padding-right: 24px;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 400;
+	color: rgba(0,0,0,0.87);
+	text-align: right;
+	white-space: nowrap;
 }
 .table td {
 	padding: 14px 0 14px 24px;
