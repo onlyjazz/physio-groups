@@ -144,15 +144,37 @@ html, body {
 
 /* Fix for navigation */
 [dir="rtl"] .top-nav {
-    float: left;
-}
-
-[dir="rtl"] .top-nav__item {
     float: right;
-    margin-left: 15px;
-    margin-right: 0;
+    display: flex;
+    justify-content: flex-start;
 }
 
+[dir="rtl"] .top-nav-wrapper {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: 12rem; /* same as .page-aside */
+	height: 64px; /* same height as header */
+	display: flex;
+	align-items: center;
+	justify-content: center; /* ✅ center items horizontally */
+	z-index: 10;
+	pointer-events: none; /* allow underlying elements to be clickable */
+  }
+  
+  [dir="rtl"] .top-nav {
+	display: flex;
+	gap: 12px;
+	pointer-events: all; /* enable clicks inside */
+	align-items: center;
+	justify-content: center;
+  }
+  
+  [dir="rtl"] .top-nav__item {
+	margin: 0;
+  }
+  
+	
 /* Fix for dropdown menus */
 [dir="rtl"] .top-nav__drop {
     right: auto;
@@ -1035,6 +1057,7 @@ a.flask-link {
 	top: 0;
 	right: 0;
 	left: 0;
+	height: 64px; /* <-- add this */
 	padding: 0 1.5rem;
 	background-color: #039be5;
 	box-shadow: 0 3px 3px 0 rgba(0,0,0,0.14), 0 3px 4px 0 rgba(0,0,0,0.12), 0 1px 8px 0 rgba(0,0,0,0.20);
@@ -1048,13 +1071,24 @@ a.flask-link {
 	z-index: 3;
 	top: 0;
 	bottom: 0;
-	left: 0;
+	left: auto; /* default LTR position */
+	right: 0;
 	width: 12rem;
 	padding: 4.5rem 0 0;
 	background-color: #263238;
 	box-shadow: 0 3px 3px 0 rgba(0,0,0,0.14), 0 3px 4px 0 rgba(0,0,0,0.12), 0 1px 8px 0 rgba(0,0,0,0.20);
 	overflow-y: auto;
 }
+
+/* Fix sidebar position for RTL */
+[dir="rtl"] .page-aside {
+	right: 0;
+	left: auto;
+	padding: 4.5rem 0 0 0; /* remove any LTR-left padding */
+}
+
+
+
 .page-aside::before {
 	content: '';
 	position: absolute;
@@ -1065,8 +1099,13 @@ a.flask-link {
 	background-color: #039be5;
 }
 .page-content {
-	padding: 7rem 3rem 3rem 15rem;
+	padding: 7rem 3rem 3rem 15rem; /* LTR layout */
 }
+
+[dir="rtl"] .page-content {
+	padding: 7rem 15rem 3rem 3rem; /* RTL layout with space on right side */
+}
+
 .page-title {
 	margin-bottom: 32px;
 	display: flex;
@@ -1167,6 +1206,7 @@ a.flask-link {
 	padding: 0 1rem;
 	line-height: 64px;
 	transition-duration: 0.225s;
+	color: #fff;
 }
 .top-nav__count {
 	position: absolute;
@@ -1183,6 +1223,26 @@ a.flask-link {
 	pointer-events: none;
 	color: #fff;
 }
+.page-aside {
+	position: fixed;
+	z-index: 3;
+	top: 0;
+	bottom: 0;
+	left: 0; /* default LTR position */
+	width: 12rem;
+	padding: 4.5rem 0 0;
+	background-color: #263238;
+	box-shadow: 0 3px 3px 0 rgba(0,0,0,0.14), 0 3px 4px 0 rgba(0,0,0,0.12), 0 1px 8px 0 rgba(0,0,0,0.20);
+	overflow-y: auto;
+}
+
+/* Fix sidebar position for RTL */
+[dir="rtl"] .page-aside {
+	right: 0;
+	left: auto;
+	padding: 4.5rem 0 0 0; /* remove any LTR-left padding */
+}
+
 .top-nav__drop {
 	position: absolute;
 	top: 100%;
@@ -1236,7 +1296,8 @@ a.flask-link {
 }
 .main-nav__item i {
 	vertical-align: top;
-	margin-right: 0.75rem;
+	margin-right: 0;
+	margin-left: 0.75rem;
 }
 .main-nav__item:hover {
 	color: rgba(255,255,255,0.7);
