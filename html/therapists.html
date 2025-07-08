@@ -11,7 +11,6 @@
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap" rel="stylesheet">
 
-
 		<link rel="stylesheet" href="css/main.css">
 	</head>
 
@@ -22,87 +21,55 @@
 					<div class="grid-col grid-col_12">
 						<div class="logo">Physiotherapy Modiin</div>
 					</div>
-					<div class="grid-col grid-col_12 tar fs0">
-						<div class="top-nav">
-							<div class="top-nav__item">
-								<a href="#" class="top-nav__link material-icons">notifications</a>
-								<i class="top-nav__count">3</i>
+				</div>
+			</header>
+			<!-- Move this OUTSIDE the header block -->
+			<div class="top-nav-wrapper">
+				<div class="top-nav">
+					<div class="top-nav__item">
+						<a href="#" class="top-nav__link material-icons">notifications</a>
+						<i class="top-nav__count">10</i>
 							</div>
-							<div class="top-nav__item">
-								<a href="#" class="top-nav__link material-icons">menu</a>
-								<div class="top-nav__drop">
-									<a href="#">Profile</a>
-									<a href="#" data-ref="#popup-settings" class="js-popup-opener">Settings</a>
-									<a href="#">Help and Support</a>
-									<a href="index.html">Logout</a>
-								</div>
-							</div>
+					<div class="top-nav__item">
+						<a href="#" class="top-nav__link material-icons">menu</a>
+						<div class="top-nav__drop">
+							<a href="#">Profile</a>
+							<a href="#" data-ref="#popup-settings" class="js-popup-opener">Settings</a>
+							<a href="#">Help and Support</a>
+							<a href="#"> Setup</a>
+							<a href="index.html">Logout</a>
 						</div>
 					</div>
 				</div>
-			</header>
-
-
+			</div>
 			<aside class="page-aside">
 				<div class="main-nav">
-					<a href="groups.html" class="main-nav__item"><i class="material-icons">dashboard</i>Groups</a>
+					<a href="groups.html" class="main-nav__item main-nav__item_active"><i class="material-icons">dashboard</i>קבוצות</a>
+					 <hr class="main-nav__sep">
+					<a href="therapists.html" class="main-nav__item"><i class="material-icons">assignment</i>מטפלים</a>
 					<hr class="main-nav__sep">
-					<a href="Therapists.html" class="main-nav__item main-nav__item_active"><i class="material-icons">assignment</i>Therapists</a>
-					<hr class="main-nav__sep">
-					<a href="patients.html" class="main-nav__item"><i class="material-icons">people</i>Patients</a>
+					<a href="patients.html" class="main-nav__item"><i class="material-icons">people</i>מטופלים</a>
 				</div>
 			</aside>
-
-
 			<main class="page-content">
 				<div class="page-title">
-					<a href="therapist-add.html" class="button button_green">Add new therapist</a>
-					<h1 class="heading heading_1">Therapists</h1>
+					
+					<a href="therapist-add.html" class="button button_green">הוסף מטופל חדש</a>
+					
 				</div>
 
 
 				<div class="grid-row">
 					<div class="grid-col grid-col_6">
 						<div class="filters card">
-							<div class="heading heading_3">Filters</div>
+							<div class="heading heading_3">חפש</div>
 							<div class="input">
 								<input type="text" class="input__text">
-								<label class="input__label">Search by name</label>
+								<label class="input__label"> לפי שם מטפל</label>
 							</div>
-							<div class="input input_date">
-								<input type="text" class="input__text">
-								<label class="input__label">Period</label>
-								<i class="material-icons">date_range</i>
-							</div>
-							<div class="input input_select">
-								<select class="input__text input__text_changed">
-									<option selected> All</option>
-									<option>Boston ABC</option>
-									<option>Houston ABC</option>
-								</select>
-								<label class="input__label">Group</label>
-							</div>
-							<div class="input input_select">
-								<select class="input__text input__text_changed">
-									<option selected> All</option>
-									<option>Consectetuer adipiscing</option>
-									<option>Aenean commodo</option>
-									<option>Aenean massa</option>
-									<option>Natoque penatibus</option>
-								</select>
-								<label class="input__label">Therapists</label>
-							</div>
-							<div class="input input_select">
-								<select class="input__text input__text_changed">
-									<option selected> All</option>
-									<option>Ligula eget</option>
-									<option>Cum sociis</option>
-									<option>Magnis</option>
-									<option>Elit</option>
-								</select>
-								<label class="input__label">PI's</label>
-							</div>
-							<button type="submit" class="button button_blocked button_flat">Apply</button>
+
+	
+							<button type="submit" class="button button_blocked button_flat">שלח</button>
 						</div>
 					</div>
 
@@ -111,14 +78,15 @@
 						<div class="groups card">
 							<div class="grid-row">
 								<div class="grid-col grid-col_12">
-									<div class="heading heading_3">All Therapists</div>
+									<div class="heading heading_3"> מטפלים</div>
 								</div>
 								<div class="grid-col grid-col_12 tar">
 									<div class="button button_s button_flat">
-										Actions <i class="material-icons">keyboard_arrow_down</i>
+										פעולות<i class="material-icons">keyboard_arrow_down</i>
 										<select class="input__text input__text_changed">
 											<option></option>
-											<option>Update</option>
+											<option>עדכן מטפל בקבוצה</option>
+											<option>הסר מטפל מקבוצה</option>
 										</select>
 									</div>
 								</div>
@@ -127,46 +95,43 @@
 								<table>
 									<tr>
 										<th class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></th>
-										<th class="tal"><a href="#" class="table__sort">Name</a></th>
-										<th class="tal"><a href="#" class="table__sort">PI</a></th>
-										<th class="tar"><a href="#" class="table__sort">Forms</a></th>
-										<th class="tar"><a href="#" class="table__sort">Screened</a></th>
-										<th class="tar"><a href="#" class="table__sort">Enrolled</a></th>
-										<th class="tar"><a href="#" class="table__sort">Dropuots</a></th>
-										<th class="tar"><a href="#" class="table__sort table__sort_down">Other</a></th>
+										<th class="tal"><a href="#" class="table__sort">מטפל.ת</a></th>										<th class="tal"><a href="#" class="table__sort">קבוצה</a></th>
+										<th class="tal"><a href="#" class="table__sort">פנוי בקבוצה</a></th>
+										<th class="tal"><a href="#" class="table__sort table__sort_down">יום ושעה</a></th>
+										<th class="tal"><a href="#" class="table__sort">סטטוס קבוצה</a></th>
 									</tr>
-									<tr data-href="Therapist-profile.html">
-										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
-										<td class="tal">LA Bio Research Labs</td>
-										<td class="tal">Paul Radin</td>
-										<td class="tar c_red">4/10</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">160</td>
+									<tr data-href="group-dashboard.html">
+										<td class="tar"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tar">עוז </td>
+										<td class="tar">Healthy exercise</td>
+										<td class="tar">2</td>
+										<td class="tar">Sunday 7:00</td>
+										<td class="tar c_green">Active</td>
 									</tr>
-									<tr data-href="Therapist-profile.html">
-										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
-										<td class="tal">Houston Bio</td>
-										<td class="tal">Gary Smith</td>
-										<td class="tar">7/10</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">3/20</td>
-										<td class="tar c_red">144</td>
+									<tr data-href="group-dashboard.html">
+										<td class="tar"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tar">גל </td>
+										<td class="tar">Pilates</td>
+										<td class="tar">1</td>
+										<td class="tar">Sunday 8:00</td>
+										<td class="tar c_green">Active</td>
 									</tr>
-									<tr data-href="Therapist-profile.html">
-										<td class="tal"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
-										<td class="tal">Boston Bio</td>
-										<td class="tal">Jon Hart</td>
-										<td class="tar">9/10</td>
-										<td class="tar">13/20</td>
-										<td class="tar">0/20</td>
-										<td class="tar">0/20</td>
-										<td class="tar c_red">56</td>
+									<tr data-href="group-dashboard.html">
+										<td class="tar"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tar">טובה</td>
+										<td class="tar">Old people</td>
+										<td class="tar">0</td>
+										<td class="tar">Monday 9:00</td>
+										<td class="tar c_red">Closed</td>
 									</tr>
-
-
+										<tr data-href="group-dashboard.html">
+										<td class="tar"><label class="checkbox"><input type="checkbox"><i class="material-icons">check</i></label></td>
+										<td class="tar">טובה</td>
+										<td class="tar">Old people</td>
+										<td class="tar">1</td>
+										<td class="tar">Tuesday 9:00</td>
+										<td class="tar c_green">Active</td>
+									</tr>
 								</table>
 							</div>
 						</div>
