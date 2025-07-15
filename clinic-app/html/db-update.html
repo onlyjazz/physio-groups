@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+            <meta charset="UTF-8">
+            <title>Physio Groups Mgmt POC Rev 4 June 10 (no module) </title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+</head>
+<h3>Proof of concept page to update SQLite</h3>
+
+<button id="save">Save</button>
+<script>
+            function runApp(SQL) {
+            var db = new SQL.Database();
+            db.run("CREATE TABLE patient (id INT, name TEXT); ");
+            db.run("INSERT into patient VALUES (?,?);", [1, "Bob"]);
+            db.run("INSERT into patient VALUES (?,?);", [2, "Alice"]);
+            var button = document.getElementById("save")
+              button.addEventListener("click", function() {
+                        var binaryArray = db.export();
+                        var blob = new Blob([binaryArray], {type: "application/octet-stream"});
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement("a");
+                        a.href=url;
+                        a.download = "patient.sqlite";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+               });
+            }
+
+            // Initialize sql.js with locateFile fallback
+            window.initSqlJs ({
+              locateFile: function (file) {
+              return "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/" + file;
+              }
+            }).then(runApp).catch(function (err) {
+              alert("SQL.js init error: "+ err.message);
+            });
+</script>
+</body>
+</html>
+
