@@ -1,11 +1,13 @@
 <script>
   import Layout from './Layout.svelte';
   import Groups from './groups.svelte';
+  import GroupEditor from './group-editor.svelte';
   import Patients from './patients.svelte';
   import Therapists from './therapists.svelte';
 
   const routes = {
     groups: Groups,
+    'group-editor': GroupEditor,
     patients: Patients,
     therapists: Therapists
   };

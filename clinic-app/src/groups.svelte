@@ -2,7 +2,7 @@
 <!-- Groups.svelte                                                -->
 <!-- ============================================================= -->
     <div class="page-title">
-      <a href="group-add.html" class="button button_green">צור קבוצה חדשה</a>
+      <a href="group-editor" class="button button_green">צור קבוצה חדשה</a>
     </div>
   
     <div class="grid-row">
@@ -62,17 +62,17 @@
                 <th class="tal">
                    <label class="checkbox"><input type="checkbox" /><i class="material-icons">check</i></label>
                 </th>
-                <th class="tal"><button class="table__sort" type="button">קבוצה</button></th>
-                <th class="tar"><button class="table__sort" type="button">סוג קבוצה</button></th>
-                <th class="tal"><button class="table__sort" type="button">פנוי</button></th>
-                <th class="tal"><button class="table__sort" type="button">מטפל/ת</button></th>
-                <th class="tal"><button class="table__sort table__sort_down" type="button">יום ושעה</button></th>
-                <th class="tal"><button class="table__sort" type="button">סטטוס</button></th>
+                <th data-id="group-name" class="tal"><button class="table__sort" type="button">קבוצה</button></th>
+                <th data-id="group-type" class="tar"><button class="table__sort" type="button">סוג קבוצה</button></th>
+                <th data-id="group-availability" class="tal"><button class="table__sort" type="button">פנוי</button></th>
+                <th data-id="group-therapist" class="tal"><button class="table__sort" type="button">מטפל/ת</button></th>
+                <th data-id="group-time" class="tal"><button class="table__sort table__sort_down" type="button">יום ושעה</button></th>
+                <th data-id="group-status" class="tal"><button class="table__sort" type="button">סטטוס</button></th>
               </tr>
               </thead>
               <tbody>
               <!-- Static demo rows -->
-              <tr data-href="group-dashboard.html">
+              <tr data-href="group-dashboard">
                 <td class="tar"><label class="checkbox"><input type="checkbox" /><i class="material-icons">check</i></label></td>
                 <td class="tar">Healthy exercise</td>
                 <td class="tar">Stretching</td>
