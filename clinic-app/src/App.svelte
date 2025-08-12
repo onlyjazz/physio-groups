@@ -1,33 +1,40 @@
-<script>
-  import Layout from './Layout.svelte';
+<script lang="ts">
   import Groups from './groups.svelte';
   import GroupEditor from './group-editor.svelte';
   import Patients from './patients.svelte';
   import Therapists from './therapists.svelte';
+  import { route } from './router';
+  import { onDestroy, onMount } from 'svelte';
 
-  const routes = {
+  const routes: Record<string, any> = {
     groups: Groups,
     'group-editor': GroupEditor,
     patients: Patients,
     therapists: Therapists
   };
 
-  let currentRoute = 'groups'; // fallback default
-  let Component = routes[currentRoute];
+  // route store (explicit subscribe)
+  let current = { name: 'groups', segments: [] as string[] };
+  const unsub = route.subscribe((r) => (current = r));
+  onDestroy(unsub);
 
-  function handleRouteChange() {
-    const hash = window.location.hash.slice(1);
-    currentRoute = routes[hash] ? hash : 'groups';
-    Component = routes[currentRoute];
-  }
+  // choose page
+  $: Comp = routes[current.name] ?? Groups;
+  $: params = { id: current.segments[0] };
 
-  // Initial load
-  handleRouteChange();
-
-  // Listen for hash changes
-  window.addEventListener('hashchange', handleRouteChange);
+  // dynamically import Layout so it can’t be pruned by HMR/TS
+  let LayoutComp: any = null;
+  onMount(async () => {
+    const mod = await import('./Layout.svelte');
+    LayoutComp = mod.default;
+  });
 </script>
 
-<Layout currentRoute={currentRoute}>
-  <svelte:component this={Component} />
-</Layout>
+{#if LayoutComp}
+  <svelte:component this={LayoutComp}>
+    <svelte:component this={Comp} {...params} />
+  </svelte:component>
+{:else}
+  <!-- tiny fallback while Layout loads -->
+  <div style="padding:12px; font-family:sans-serif;">Loading…</div>
+{/if}

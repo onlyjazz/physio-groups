@@ -2,7 +2,7 @@
 <!-- Groups.svelte                                                -->
 <!-- ============================================================= -->
     <div class="page-title">
-      <a href="group-editor" class="button button_green">צור קבוצה חדשה</a>
+      <a href="#/group-editor" class="button button_green">צור קבוצה חדשה</a>
     </div>
   
     <div class="grid-row">
@@ -81,7 +81,7 @@
                 <td class="tar">Sunday 7:00</td>
                 <td class="tar c_green">Active</td>
               </tr>
-              <tr data-href="group-dashboard.html">
+              <tr data-href="group-dashboard">
                 <td class="tar"><label class="checkbox"><input type="checkbox" /><i class="material-icons">check</i></label></td>
                 <td class="tar">Pilates</td>
                 <td class="tar">Pilates</td>

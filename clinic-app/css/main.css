@@ -233,6 +233,9 @@ a.flask-link {
 .grid-row {
 	margin: 0 -1rem;
 	font-size: 0;
+	display: block;
+	width: 100%;
+	overflow: hidden;
 }
 .grid-col {
 	display: inline-block;
@@ -241,6 +244,16 @@ a.flask-link {
 	box-sizing: border-box;
 	font-size: 1rem;
 }
+.grid-col :global(.svelte-select) {
+	z-index: 10;
+	overflow: visible;
+	position: relative;
+}
+:global(.svelte-select__menu) {
+	z-index: 9999;
+	background-color: white;
+}
+
 .grid-col_1 {
 	width: 4.166%;
 }
@@ -651,7 +664,7 @@ a.flask-link {
 	padding-top: 12px;
 	font-size: 15px;
 }
-
+/*
 .input__text {
 	width: 100%;
 	padding: 8px 0;
@@ -667,7 +680,30 @@ a.flask-link {
 	-webkit-appearance: none;
 	appearance: none;
 }
-.input_date .input__label, .input_date  .input__text, .input_time {
+*/
+.input__text {
+	height: 38px;
+	padding: 8px 12px;
+	font-size: 16px;
+	line-height: 24px;
+}
+
+.input_time {
+	position: relative;
+	overflow: visible;
+  }
+  
+  .input_time input[type="time"] {
+	width: 100%;
+	height: 38px;
+	padding: 8px 12px;
+	font-size: 12px;
+	box-sizing: border-box;
+	direction: rtl;
+	border-radius: 4px;
+  }
+  
+.input_date .input__label, .input_date  .input__text {
 	overflow: hidden;
 	padding-right: 22px;
 	white-space: nowrap;
@@ -714,6 +750,17 @@ a.flask-link {
 	line-height: 12px;
 	color: rgba(0,0,0,0.38);
 }
+/* Fix for select elements - label should float up when select has focus or value */
+.input_select select:focus + .input__label,
+.input_select select + .input__label {
+	top: 0;
+	font-size: 12px;
+	line-height: 12px;
+	color: rgba(0,0,0,0.38);
+}
+.input_select select:focus + .input__label {
+	color: #03A9F4;
+}
 .input_date i,
 .input_time i,
 .input_token i {
@@ -727,6 +774,7 @@ a.flask-link {
 	color: rgba(0,0,0,0.38);
 	transition-duration: 0.225s;
 }
+
 .input_select::after {
 	content: '';
 	position: absolute;
@@ -742,11 +790,11 @@ a.flask-link {
 	position: absolute;
 	top: 12px;
 	right: 0;
-	width: 26px;
 	height: 35px;
 	background-color: #fff;
 	pointer-events: none;
 }
+
 .checkbox {
 	position: relative;
 	display: inline-block;

@@ -1,75 +1,57 @@
-<script>
-    export let currentRoute = '';
+<script lang="ts">
+    import { onMount } from 'svelte';
+    // one global import is enough; it will cascade to all pages
+    import '../css/main.css';
+  
+    onMount(() => {
+      // ensure RTL + Hebrew so the CSS’ RTL rules apply
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'he');
+    });
   </script>
-
-    <svelte:head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-    <meta name="Content-Language" content="he" />
-    <meta name="google" content="notranslate" />
-
-    <!-- External resources allowed by clinic firewall -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@100..900&display=swap" rel="stylesheet" />
-
-    <!-- Local stylesheet lives in css/main.css next to the compiled HTML files -->
-    <link rel="stylesheet" href="css/main.css" />
-    </svelte:head>
-
-    <div class="page" dir="rtl" lang="he">
-    <!-- Header -->
+  
+  <div class="page">
     <header class="page-header">
-        <div class="grid-row">
+      <div class="grid-row">
         <div class="grid-col grid-col_12">
-            <div class="logo">Physiotherapy Modiin</div>
+          <div class="logo">Phizio Groups</div>
         </div>
-        </div>
-    </header>
-
-    <!-- Top nav (notifications + hamburger) -->
-    <nav class="top-nav-wrapper">
-        <div class="top-nav">
-        <div class="top-nav__item">
-            <button class="top-nav__link material-icons" type="button">notifications</button>
-            <i class="top-nav__count">10</i>
-        </div>
-        <div class="top-nav__item">
-            <button class="top-nav__link material-icons" type="button">menu</button>
-            <div class="top-nav__drop">
-            <button class="top-nav__link" aria-label="Profile">Profile</button>
-            <button class="top-nav__link js-popup-opener" data-ref="#popup-settings" aria-label="Settings">Settings</button>
-            <button class="top-nav__link" aria-label="Help and Support">Help and Support</button>
-            <button class="top-nav__link" aria-label="Setup">Setup</button>
-            <button class="top-nav__link" aria-label="Logout" on:click={() => { /* Add logout logic here */ }}>Logout</button>
+        <div class="grid-col grid-col_12 tar fs0">
+          <div class="top-nav">
+            <div class="top-nav__item">
+              <a class="top-nav__link material-icons">notifications</a>
+              <i class="top-nav__count">3</i>
             </div>
+            <div class="top-nav__item">
+              <a class="top-nav__link material-icons">menu</a>
+              <div class="top-nav__drop">
+                <a>Profile</a>
+                <a>Settings</a>
+                <a>Help and Support</a>
+                <a href="#/groups">Logout</a>
+              </div>
+            </div>
+          </div>
         </div>
-        </div>
-    </nav>
-
-    <!-- Side navigation -->
+      </div>
+    </header>
+  
     <aside class="page-aside">
-        <nav class="main-nav">
-            <button
-                class="main-nav__item {currentRoute === 'groups' ? 'main-nav__item_active' : ''}"
-                on:click={() => window.location.hash = 'groups'}
-            ><i class="material-icons">dashboard</i>קבוצות</button>
+      <div class="main-nav">
+        <a href="#/groups" class="main-nav__item"><i class="material-icons">dashboard</i>קבוצות</a>
         <hr class="main-nav__sep" />
-        <button
-            class="main-nav__item {currentRoute === 'therapists' ? 'main-nav__item_active' : ''}"
-            aria-label="Therapists"
-            on:click={() => window.location.hash = 'therapists'}
-            ><i class="material-icons">assignment</i>מטפלים</button>
+        <a href="#/therapists" class="main-nav__item"><i class="material-icons">assignment</i>מטפלים</a>
         <hr class="main-nav__sep" />
-        <button
-            class="main-nav__item {currentRoute === 'patients' ? 'main-nav__item_active' : ''}"
-            aria-label="Patients"
-            on:click={() => window.location.hash = 'patients'}
-            ><i class="material-icons">people</i>מטופלים</button>
-        </nav>
+        <a href="#/patients" class="main-nav__item"><i class="material-icons">people</i>מטופלים</a>
+      </div>
     </aside>
-
-    <!-- Where each page injects its own markup -->
+  
     <main class="page-content">
-        <slot />
+      <slot />
     </main>
-    </div>
+  </div>
+  
+  <style>
+    /* keep this empty; all styling comes from main.css */
+  </style>
+  
