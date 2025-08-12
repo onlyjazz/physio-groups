@@ -37,7 +37,7 @@
     <form class="grid">
       <div class="grid-row">
         <!-- Group name -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
+        <div class="grid-col grid-col_8 grid-col_md-24">
           <div class="input">
             <input type="text" class="input__text" bind:value={groupName} placeholder="" />
             <label class="input__label">שם קבוצה</label>
@@ -45,7 +45,7 @@
         </div>
   
         <!-- Available places -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
+        <div class="grid-col grid-col_8 grid-col_md-24">
           <div class="input">
             <input type="number" class="input__text" bind:value={groupAvailability} min="0" />
             <label class="input__label">מספר מקומות פנויים</label>
@@ -53,7 +53,7 @@
         </div>
   
         <!-- Therapist -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
+        <div class="grid-col grid-col_8 grid-col_md-24">
           <div class="input">
             <div class="input__label input__label_static">מטפל/ת</div>
             <Select
@@ -65,9 +65,9 @@
             />
           </div>
         </div>
-  
+     
         <!-- Status -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
+        <div class="grid-col grid-col_8 grid-col_md-24">
           <div class="input">
             <div class="input__label input__label_static">סטטוס</div>
             <Select
@@ -81,7 +81,7 @@
         </div>
   
         <!-- Day of week -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
+        <div class="grid-col grid-col_8 grid-col_md-24">
           <div class="input">
             <div class="input__label input__label_static">יום בשבוע</div>
             <Select
@@ -95,13 +95,13 @@
         </div>
   
         <!-- Start time -->
-        <div class="grid-col grid-col_12 grid-col_md-24">
-          <div class="input input_time">
+        <div class="grid-col grid-col_8 grid-col_md-24">
+          <div class="input">
+            <div class="input__label input__label_static">שעת התחלה</div>
             <input type="time" class="input__text" bind:value={groupTime} />
-            <label class="input__label">שעת התחלה</label>
-            <i class="material-icons">access_time</i>
           </div>
         </div>
+
       </div>
     </form>
   </div>
@@ -203,5 +203,28 @@
   
     /* make sure the menu opens over other UI */
     :global(.svelte-select__menu) { z-index: 9999; }
+
+    /* for fields with a static label above them, remove the floating-label padding */
+    :global(.edit-groups-form .input .input__label_static + .input__text) {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 44px;
+    line-height: 44px; /* center the digits vertically */
+  }
+
+  /* make sure the native time input matches exactly */
+  :global(.edit-groups-form input[type="time"].input__text) {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 44px;
+    line-height: 44px;
+  }
+
+  /* optional: same for the numeric availability field if needed */
+  :global(.edit-groups-form input[type="number"].input__text) {
+    padding-top: 0;
+    line-height: 44px;
+  }
+
   </style>
   
