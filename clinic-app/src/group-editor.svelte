@@ -107,6 +107,27 @@
   </div>
   
   <style>
+     /* Keep the three small fields aligned on the same baseline */
+  :global(.edit-groups-form .sm-row) {
+    align-items: center; /* grid-row is flex in your style-guide */
+  }
+
+  /* Static labels + inputs at 44px for clean vertical rhythm */
+  :global(.edit-groups-form .input .input__label_static + .input__text) {
+    height: 44px;
+    line-height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* Time input same height */
+  :global(.edit-groups-form input[type="time"].input__text) {
+    height: 44px;
+    line-height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: left; /* RTL nicety for 08:00 */
+  }
     /* keep form spacing tight and consistent with your guide */
     :global(.edit-groups-form .input) { margin-bottom: 18px; }
 
