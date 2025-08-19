@@ -2,8 +2,26 @@
   import { load, save, api, type Db } from '../lib/db'
   let db: Db = load()
   let name = ''
+  let editingId = ''
+  let editingName = ''
+  
   function add() { if (!name.trim()) return; api.addTherapist(db, name.trim()); name=''; db = load() }
   function del(id: string) { if (confirm('למחוק מטפל/ת?')) { api.removeTherapist(db,id); db=load() } }
+  function startEdit(id: string, currentName: string) {
+    editingId = id
+    editingName = currentName
+  }
+  function cancelEdit() {
+    editingId = ''
+    editingName = ''
+  }
+  function saveEdit() {
+    if (!editingName.trim()) return
+    api.updateTherapist(db, editingId, { name: editingName.trim() })
+    editingId = ''
+    editingName = ''
+    db = load()
+  }
 </script>
 
 <section class="space-y-6">
@@ -16,25 +34,31 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-4">
-    <table class="w-full text-right">
-      <thead><tr class="text-sm text-gray-500">
-        <th class="py-2">שם</th>
-        <th class="py-2 w-32">פעולות</th>
-      </tr></thead>
-      <tbody>
-        {#each db.therapists as t (t.id)}
-          <tr class="border-t">
-            <td class="py-2">{t.name}</td>
-            <td class="py-2">
-              <button class="text-red-600 hover:underline" on:click={() => del(t.id)}>מחק</button>
-            </td>
-          </tr>
-        {/each}
-        {#if db.therapists.length === 0}
-          <tr><td class="py-4 text-gray-500" colspan="2">אין מטפלים</td></tr>
-        {/if}
-      </tbody>
-    </table>
+    <div class="space-y-2">
+      {#each db.therapists as t (t.id)}
+        <div class="flex items-center justify-between py-2">
+          <div class="flex-1 max-w-sm">
+            {#if editingId === t.id}
+              <input class="border rounded px-2 py-1 w-full" bind:value={editingName} on:keydown={(e) => e.key === 'Enter' && saveEdit()}/>
+            {:else}
+              <span class="text-gray-900">{t.name}</span>
+            {/if}
+          </div>
+          <div class="flex gap-3 min-w-[120px] justify-end">
+            {#if editingId === t.id}
+              <button class="text-green-600 hover:underline text-sm" on:click={saveEdit}>שמור</button>
+              <button class="text-gray-600 hover:underline text-sm" on:click={cancelEdit}>ביטול</button>
+            {:else}
+              <button class="text-blue-600 hover:underline text-sm" on:click={() => startEdit(t.id, t.name)}>ערוך</button>
+              <button class="text-red-600 hover:underline text-sm" on:click={() => del(t.id)}>מחק</button>
+            {/if}
+          </div>
+        </div>
+      {/each}
+      {#if db.therapists.length === 0}
+        <div class="py-8 text-center text-gray-500">אין מטפלים</div>
+      {/if}
+    </div>
   </div>
 </section>
 

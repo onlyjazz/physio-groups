@@ -101,13 +101,20 @@ export const api = {
     db.therapistsInGroups.push({ id: uid(), therapistId, groupId, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
     save(db)
   },
-  addPatientToGroup(db: Db, groupId: ID, patientId: ID) {
+  addPatientToGroup(db: Db, groupId: ID, patientId: ID, receipt?: string) {
     if (db.patientsInGroups.some(x => x.groupId === groupId && x.patientId === patientId)) return
-    db.patientsInGroups.push({ id: uid(), patientId, groupId, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
+    db.patientsInGroups.push({ id: uid(), patientId, groupId, receipt, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
     save(db)
   },
   removePatientFromGroup(db: Db, groupId: ID, patientId: ID) {
     db.patientsInGroups = db.patientsInGroups.filter(x => !(x.groupId === groupId && x.patientId === patientId))
+    save(db)
+  },
+  updatePatientReceipt(db: Db, groupId: ID, patientId: ID, receipt: string) {
+    const patientInGroup = db.patientsInGroups.find(x => x.groupId === groupId && x.patientId === patientId)
+    if (!patientInGroup) return
+    patientInGroup.receipt = receipt
+    patientInGroup.updatedAt = Date.now()
     save(db)
   }
 }
