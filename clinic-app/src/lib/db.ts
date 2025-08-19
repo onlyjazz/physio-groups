@@ -1,0 +1,114 @@
+export type ID = string
+
+export interface Status { id: ID; code: 'active'|'inactive' }
+export interface Therapist { id: ID; name: string; createdAt: number; updatedAt: number; statusId: ID }
+export interface Patient { id: ID; nationalId: string; phone: string; firstName: string; lastName: string; createdAt: number; updatedAt: number; statusId: ID }
+export interface Group { id: ID; name: string; createdAt: number; updatedAt: number }
+export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; createdAt: number; updatedAt: number; statusId: ID }
+export interface TherapistsInGroups { id: ID; therapistId: ID; groupId: ID; createdAt: number; updatedAt: number; statusId: ID }
+
+export interface Db {
+  statuses: Status[]
+  therapists: Therapist[]
+  patients: Patient[]
+  groups: Group[]
+  patientsInGroups: PatientsInGroups[]
+  therapistsInGroups: TherapistsInGroups[]
+}
+
+const KEY = 'phizio-db-v1'
+
+function uid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) }
+
+export function load(): Db {
+  const raw = localStorage.getItem(KEY)
+  if (raw) return JSON.parse(raw)
+  // seed
+  const now = Date.now()
+  const active: Status = { id: uid(), code: 'active' }
+  const inactive: Status = { id: uid(), code: 'inactive' }
+  const seed: Db = {
+    statuses: [active, inactive],
+    therapists: [],
+    patients: [],
+    groups: [],
+    patientsInGroups: [],
+    therapistsInGroups: [],
+  }
+  localStorage.setItem(KEY, JSON.stringify(seed))
+  return seed
+}
+
+export function save(db: Db) {
+  localStorage.setItem(KEY, JSON.stringify(db))
+}
+
+export function findStatusId(db: Db, code: 'active'|'inactive') {
+  return db.statuses.find(s => s.code === code)!.id
+}
+
+/* CRUD helpers */
+export const api = {
+  addTherapist(db: Db, name: string) {
+    const now = Date.now()
+    db.therapists.push({ id: uid(), name, createdAt: now, updatedAt: now, statusId: findStatusId(db, 'active') })
+    save(db)
+  },
+  updateTherapist(db: Db, id: ID, patch: Partial<Omit<Therapist,'id'>>) {
+    const t = db.therapists.find(x => x.id === id); if (!t) return
+    Object.assign(t, patch, { updatedAt: Date.now() }); save(db)
+  },
+  removeTherapist(db: Db, id: ID) {
+    db.therapists = db.therapists.filter(t => t.id !== id)
+    db.therapistsInGroups = db.therapistsInGroups.filter(x => x.therapistId !== id)
+    save(db)
+  },
+
+  addPatient(db: Db, p: Omit<Patient,'id'|'createdAt'|'updatedAt'|'statusId'>) {
+    const now = Date.now()
+    db.patients.push({ id: uid(), ...p, createdAt: now, updatedAt: now, statusId: findStatusId(db, 'active') })
+    save(db)
+  },
+  updatePatient(db: Db, id: ID, patch: Partial<Omit<Patient,'id'>>) {
+    const x = db.patients.find(x => x.id === id); if (!x) return
+    Object.assign(x, patch, { updatedAt: Date.now() }); save(db)
+  },
+  removePatient(db: Db, id: ID) {
+    db.patients = db.patients.filter(x => x.id !== id)
+    db.patientsInGroups = db.patientsInGroups.filter(x => x.patientId !== id)
+    save(db)
+  },
+
+  addGroup(db: Db, name: string) {
+    const now = Date.now()
+    db.groups.push({ id: uid(), name, createdAt: now, updatedAt: now })
+    save(db)
+  },
+  updateGroup(db: Db, id: ID, patch: Partial<Omit<Group,'id'>>) {
+    const g = db.groups.find(g => g.id === id); if (!g) return
+    Object.assign(g, patch, { updatedAt: Date.now() }); save(db)
+  },
+  removeGroup(db: Db, id: ID) {
+    db.groups = db.groups.filter(g => g.id !== id)
+    db.patientsInGroups = db.patientsInGroups.filter(x => x.groupId !== id)
+    db.therapistsInGroups = db.therapistsInGroups.filter(x => x.groupId !== id)
+    save(db)
+  },
+
+  setTherapistForGroup(db: Db, groupId: ID, therapistId: ID) {
+    // one therapist per group; ensure at most one row
+    db.therapistsInGroups = db.therapistsInGroups.filter(x => x.groupId !== groupId)
+    db.therapistsInGroups.push({ id: uid(), therapistId, groupId, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
+    save(db)
+  },
+  addPatientToGroup(db: Db, groupId: ID, patientId: ID) {
+    if (db.patientsInGroups.some(x => x.groupId === groupId && x.patientId === patientId)) return
+    db.patientsInGroups.push({ id: uid(), patientId, groupId, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
+    save(db)
+  },
+  removePatientFromGroup(db: Db, groupId: ID, patientId: ID) {
+    db.patientsInGroups = db.patientsInGroups.filter(x => !(x.groupId === groupId && x.patientId === patientId))
+    save(db)
+  }
+}
+
