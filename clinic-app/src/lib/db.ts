@@ -3,9 +3,10 @@ export type ID = string
 export interface Status { id: ID; code: 'active'|'inactive' }
 export interface Therapist { id: ID; name: string; createdAt: number; updatedAt: number; statusId: ID }
 export interface Patient { id: ID; nationalId: string; phone: string; firstName: string; lastName: string; createdAt: number; updatedAt: number; statusId: ID }
-export interface Group { id: ID; name: string; createdAt: number; updatedAt: number }
+export interface Group { id: ID; name: string; capacity: number; available: number; when: string; createdAt: number; updatedAt: number }
 export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; createdAt: number; updatedAt: number; statusId: ID }
 export interface TherapistsInGroups { id: ID; therapistId: ID; groupId: ID; createdAt: number; updatedAt: number; statusId: ID }
+export interface Attendance { id: ID; patientId: ID; groupId: ID; date: string; createdAt: number }
 
 export interface Db {
   statuses: Status[]
@@ -14,6 +15,7 @@ export interface Db {
   groups: Group[]
   patientsInGroups: PatientsInGroups[]
   therapistsInGroups: TherapistsInGroups[]
+  attendance: Attendance[]
 }
 
 const KEY = 'phizio-db-v1'
@@ -22,7 +24,14 @@ function uid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().
 
 export function load(): Db {
   const raw = localStorage.getItem(KEY)
-  if (raw) return JSON.parse(raw)
+  if (raw) {
+    const parsed = JSON.parse(raw)
+    // Handle migration: add attendance array if missing
+    if (!parsed.attendance) {
+      parsed.attendance = []
+    }
+    return parsed
+  }
   // seed
   const now = Date.now()
   const active: Status = { id: uid(), code: 'active' }
@@ -34,6 +43,7 @@ export function load(): Db {
     groups: [],
     patientsInGroups: [],
     therapistsInGroups: [],
+    attendance: []
   }
   localStorage.setItem(KEY, JSON.stringify(seed))
   return seed
@@ -76,12 +86,13 @@ export const api = {
   removePatient(db: Db, id: ID) {
     db.patients = db.patients.filter(x => x.id !== id)
     db.patientsInGroups = db.patientsInGroups.filter(x => x.patientId !== id)
+    db.attendance = db.attendance.filter(x => x.patientId !== id)
     save(db)
   },
 
-  addGroup(db: Db, name: string) {
+  addGroup(db: Db, name: string, capacity: number = 15, available: number = 15, when: string = 'open') {
     const now = Date.now()
-    db.groups.push({ id: uid(), name, createdAt: now, updatedAt: now })
+    db.groups.push({ id: uid(), name, capacity, available, when, createdAt: now, updatedAt: now })
     save(db)
   },
   updateGroup(db: Db, id: ID, patch: Partial<Omit<Group,'id'>>) {
@@ -92,6 +103,7 @@ export const api = {
     db.groups = db.groups.filter(g => g.id !== id)
     db.patientsInGroups = db.patientsInGroups.filter(x => x.groupId !== id)
     db.therapistsInGroups = db.therapistsInGroups.filter(x => x.groupId !== id)
+    db.attendance = db.attendance.filter(x => x.groupId !== id)
     save(db)
   },
 
@@ -116,6 +128,39 @@ export const api = {
     patientInGroup.receipt = receipt
     patientInGroup.updatedAt = Date.now()
     save(db)
+  },
+
+  // Attendance operations
+  markAttendance(db: Db, groupId: ID, patientId: ID, date: string) {
+    // Check if attendance already exists for this patient, group, and date
+    const existing = db.attendance.find(a => 
+      a.groupId === groupId && a.patientId === patientId && a.date === date
+    )
+    if (existing) return // Already marked
+    
+    db.attendance.push({
+      id: uid(),
+      patientId,
+      groupId,
+      date,
+      createdAt: Date.now()
+    })
+    save(db)
+  },
+  
+  unmarkAttendance(db: Db, groupId: ID, patientId: ID, date: string) {
+    db.attendance = db.attendance.filter(a => 
+      !(a.groupId === groupId && a.patientId === patientId && a.date === date)
+    )
+    save(db)
+  },
+  
+  getAttendanceForGroupAndDate(db: Db, groupId: ID, date: string): Set<ID> {
+    return new Set(
+      db.attendance
+        .filter(a => a.groupId === groupId && a.date === date)
+        .map(a => a.patientId)
+    )
   }
 }
 

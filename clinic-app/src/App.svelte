@@ -4,15 +4,19 @@
   import Therapists from './pages/Therapists.svelte'
   import Patients from './pages/Patients.svelte'
   import Groups from './pages/Groups.svelte'
+  import GroupsList from './pages/GroupsList.svelte'
+  import GroupAttendance from './pages/GroupAttendance.svelte'
 
   const routes: Record<string, any> = {
     therapists: Therapists,
     patients: Patients,
-    groups: Groups
+    groups: Groups,
+    groupsList: GroupsList,
+    groupAttendance: GroupAttendance
   }
 
   $: current = $route
-  $: Comp = routes[current.name] ?? Groups
+  $: Comp = routes[current.name] ?? GroupsList
 </script>
 
 <Nav />

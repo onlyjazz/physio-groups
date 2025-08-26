@@ -1,31 +1,58 @@
 <script lang="ts">
   import { load, api, type Db } from '../lib/db'
+  import { route } from '../router'
+  import { goto } from '../router'
+  
   let db: Db = load()
-  let name='' ; let therapistId = db.therapists[0]?.id ?? ''
+  
+  // Get group ID from route if available
+  $: groupId = $route.segments[0] || null
+  $: displayGroups = groupId ? db.groups.filter(g => g.id === groupId) : []
   
   
   // Edit group functionality
   let editingGroupId = ''
   let editingGroupName = ''
+  let editingGroupCapacity = 15
+  let editingGroupAvailable = 15
+  let editingGroupWhen = 'open'
 
-  function add() {
-    if (!name.trim()) return
-    api.addGroup(db,name.trim()); name=''; db=load()
+  function del(id: string) { 
+    if (confirm('למחוק קבוצה?')) { 
+      api.removeGroup(db,id)
+      db=load()
+      // Navigate back to list after deletion
+      goto('groupsList')
+    } 
   }
-  function del(id: string) { if (confirm('למחוק קבוצה?')) { api.removeGroup(db,id); db=load() } }
   function startEditGroup(id: string, currentName: string) {
+    const group = db.groups.find(g => g.id === id)
     editingGroupId = id
     editingGroupName = currentName
+    editingGroupCapacity = group?.capacity || 15
+    editingGroupAvailable = group?.available || 15
+    editingGroupWhen = group?.when || 'open'
   }
   function cancelEditGroup() {
     editingGroupId = ''
     editingGroupName = ''
+    editingGroupCapacity = 15
+    editingGroupAvailable = 15
+    editingGroupWhen = 'open'
   }
   function saveEditGroup() {
     if (!editingGroupName.trim()) return
-    api.updateGroup(db, editingGroupId, { name: editingGroupName.trim() })
+    api.updateGroup(db, editingGroupId, { 
+      name: editingGroupName.trim(),
+      capacity: editingGroupCapacity,
+      available: editingGroupAvailable,
+      when: editingGroupWhen
+    })
     editingGroupId = ''
     editingGroupName = ''
+    editingGroupCapacity = 15
+    editingGroupAvailable = 15
+    editingGroupWhen = 'open'
     db = load()
   }
   function setTherapist(groupId: string, tId: string) {
@@ -47,28 +74,37 @@
   function updateReceipt(groupId: string, patientId: string, newReceipt: string) {
     api.updatePatientReceipt(db, groupId, patientId, newReceipt); db=load()
   }
+  
+  function backToList() {
+    goto('groupsList')
+  }
 </script>
 
 <section class="space-y-6">
-  <div class="bg-white rounded-lg shadow p-4">
-    <h2 class="text-lg font-semibold mb-4">קבוצות</h2>
-    <form class="grid grid-cols-12 gap-3" on:submit|preventDefault={add}>
-      <input class="col-span-6 border rounded px-3 h-10" placeholder="שם קבוצה" bind:value={name}/>
-      <select class="col-span-4 border rounded px-3 h-10" bind:value={therapistId}>
-        {#each db.therapists as t}<option value={t.id}>{t.name}</option>{/each}
-      </select>
-      <div class="col-span-2">
-        <button class="button bg-blue-600 text-white rounded px-4 h-10 hover:bg-blue-700">צור קבוצה</button>
+  {#if groupId}
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold">עריכת קבוצה</h2>
+        <button 
+          class="text-blue-600 hover:underline text-sm" 
+          on:click={backToList}
+        >
+          חזרה לרשימה
+        </button>
       </div>
-    </form>
-  </div>
+    </div>
+  {/if}
 
-  {#each db.groups as g (g.id)}
+  {#if !groupId}
+    <p class="text-center text-gray-500 py-8">אנא בחר קבוצה מהרשימה</p>
+  {/if}
+
+  {#each displayGroups as g (g.id)}
     <div class="bg-white rounded-lg shadow p-4 space-y-3">
       <div class="flex items-center gap-3">
         <h3 class="text-base font-semibold ml-auto">
           {#if editingGroupId === g.id}
-            <input class="border rounded px-2 py-1" bind:value={editingGroupName} on:keydown={(e) => e.key === 'Enter' && saveEditGroup()}/>
+            <input class="border rounded px-2 py-1 text-right" bind:value={editingGroupName} on:keydown={(e) => e.key === 'Enter' && saveEditGroup()}/>
           {:else}
             {g.name}
           {/if}
@@ -84,21 +120,42 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-3 items-center">
-        <label class="col-span-2 text-sm text-gray-500" for="therapist-{g.id}">מטפל/ת</label>
-        <select id="therapist-{g.id}" class="col-span-4 border rounded px-3 h-10" on:change={(e)=>setTherapist(g.id,(e.target as HTMLSelectElement).value)}
+      <div class="flex items-center gap-2">
+        <select id="therapist-{g.id}" class="flex-1 border rounded px-3 h-10 text-right" dir="rtl" on:change={(e)=>setTherapist(g.id,(e.target as HTMLSelectElement).value)}
           value={db.therapistsInGroups.find(x=>x.groupId===g.id)?.therapistId ?? ''}>
           <option value="" disabled selected={!db.therapistsInGroups.find(x=>x.groupId===g.id)}>בחר/י</option>
           {#each db.therapists as t}<option value={t.id}>{t.name}</option>{/each}
         </select>
+        <label class="text-sm text-gray-500 whitespace-nowrap ml-2" for="therapist-{g.id}">מטפל/ת</label>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        {#if editingGroupId === g.id}
+          <input class="w-16 border rounded px-2 py-1 text-sm text-right" type="number" bind:value={editingGroupCapacity}/>
+        {:else}
+          <span class="w-16 text-sm">{g.capacity || 15}</span>
+        {/if}
+        <span class="text-sm text-gray-500 whitespace-nowrap ml-1">קיבולת</span>
+        {#if editingGroupId === g.id}
+          <input class="w-16 border rounded px-2 py-1 text-sm text-right" type="number" bind:value={editingGroupAvailable}/>
+        {:else}
+          <span class="w-16 text-sm">{g.available || 15}</span>
+        {/if}
+        <span class="text-sm text-gray-500 whitespace-nowrap ml-1">פנוי</span>
+        {#if editingGroupId === g.id}
+          <input class="w-40 border rounded px-2 py-1 text-sm text-right" bind:value={editingGroupWhen}/>
+        {:else}
+          <span class="w-40 text-sm">{g.when || 'open'}</span>
+        {/if}
+        <span class="text-sm text-gray-500 whitespace-nowrap ml-1">מתי</span>
       </div>
 
-      <div class="grid grid-cols-12 gap-3 items-center">
-        <label class="col-span-2 text-sm text-gray-500" for="add-patient-{g.id}">הוסף/י מטופל/ת</label>
-        <select id="add-patient-{g.id}" class="col-span-4 border rounded px-3 h-10" on:change={(e)=>addPatient(g.id,(e.target as HTMLSelectElement).value)}>
+      <div class="flex items-center gap-2">
+        <select id="add-patient-{g.id}" class="flex-1 border rounded px-3 h-10 text-right" dir="rtl" on:change={(e)=>addPatient(g.id,(e.target as HTMLSelectElement).value)}>
           <option value="" selected disabled>בחר/י מטופל/ת</option>
           {#each db.patients as p}<option value={p.id}>{p.firstName} {p.lastName}</option>{/each}
         </select>
+        <label class="text-sm text-gray-500 whitespace-nowrap ml-2" for="add-patient-{g.id}">הוסף/י מטופל/ת</label>
       </div>
 
       <div>
@@ -106,22 +163,22 @@
         <ul class="space-y-2">
           {#each db.patientsInGroups.filter(x=>x.groupId===g.id) as row (row.id)}
             <li class="bg-gray-50 p-3 rounded border">
-              <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center justify-end gap-3 mb-2">
+                <button class="text-red-600 hover:underline text-sm" on:click={() => removePatient(g.id,row.patientId)}>הסר/י</button>
                 <span class="font-medium">
                   {db.patients.find(p=>p.id===row.patientId)?.firstName}
                   {db.patients.find(p=>p.id===row.patientId)?.lastName}
                 </span>
-                <button class="text-red-600 hover:underline text-sm" on:click={() => removePatient(g.id,row.patientId)}>הסר/י</button>
               </div>
-              <div class="flex items-center gap-2">
-                <label class="text-sm text-gray-500" for="receipt-{g.id}-{row.patientId}">קבלה:</label>
+              <div class="flex items-center gap-2 justify-end">
                 <input 
                   id="receipt-{g.id}-{row.patientId}"
-                  class="border rounded px-2 py-1 text-sm flex-1" 
+                  class="border rounded px-2 py-1 text-sm flex-1 text-right" 
                   placeholder="מספר קבלה"
                   value={row.receipt || ''}
                   on:blur={(e) => updateReceipt(g.id, row.patientId, (e.target as HTMLInputElement).value)}
                 />
+                <label class="text-sm text-gray-500" for="receipt-{g.id}-{row.patientId}">קבלה</label>
               </div>
             </li>
           {/each}
