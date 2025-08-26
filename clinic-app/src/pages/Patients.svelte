@@ -1,9 +1,13 @@
 <script lang="ts">
   import { load, api, type Db, type Patient } from '../lib/db'
+  import { exportToCSV } from '../lib/csvExport'
   let db: Db = load()
   let firstName='', lastName='', nationalId='', phone=''
   let editingId = ''
   let editingFirstName = '', editingLastName = '', editingNationalId = '', editingPhone = ''
+  
+  // Sorting state
+  let sortDirection: 'asc' | 'desc' = 'asc'
   
   function add() {
     if (!firstName || !lastName) return
@@ -35,11 +39,46 @@
     editingFirstName = editingLastName = editingNationalId = editingPhone = ''
     db = load()
   }
+  
+  // Sorting function
+  function toggleSort() {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+  }
+  
+  // Get sorted patients
+  $: sortedPatients = (() => {
+    const patients = [...db.patients]
+    return patients.sort((a, b) => {
+      const fullNameA = `${a.firstName || ''} ${a.lastName || ''}`
+      const fullNameB = `${b.firstName || ''} ${b.lastName || ''}`
+      const compareValue = fullNameA.localeCompare(fullNameB, 'he')
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+  })()
+  
+  // Export function
+  function exportPatients() {
+    const exportData = sortedPatients.map(p => ({
+      'שם פרטי': p.firstName,
+      'שם משפחה': p.lastName,
+      'ת.ז.': p.nationalId,
+      'טלפון': p.phone
+    }))
+    exportToCSV(exportData, 'patients')
+  }
 </script>
 
 <section class="space-y-6">
   <div class="bg-white rounded-lg shadow p-4">
-    <h2 class="text-lg font-semibold mb-4">מטופלים</h2>
+    <div class="flex justify-between items-center mb-4">
+      <button 
+        class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+        on:click={exportPatients}
+      >
+        ייצוא
+      </button>
+      <h2 class="text-lg font-semibold">מטופלים</h2>
+    </div>
     <form class="grid grid-cols-12 gap-3" on:submit|preventDefault={add}>
       <input class="col-span-3 border rounded px-3 h-10" placeholder="שם פרטי" bind:value={firstName}/>
       <input class="col-span-3 border rounded px-3 h-10" placeholder="שם משפחה" bind:value={lastName}/>
@@ -52,8 +91,26 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-4">
+    <!-- Header row -->
+    <div class="flex items-center gap-4 py-2 border-b mb-2">
+      <div class="flex-1 min-w-0">
+        <button 
+          class="py-1 px-2 inline-flex items-center"
+          on:click={toggleSort}
+        >
+          <span class="text-gray-700 font-semibold text-sm">פרטי מטופל</span>
+          <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
+          </svg>
+        </button>
+      </div>
+      <div class="flex gap-1 min-w-[80px] justify-end">
+        <!-- Empty space for action buttons column -->
+      </div>
+    </div>
+    
     <div class="space-y-2">
-      {#each db.patients as p (p.id)}
+      {#each sortedPatients as p (p.id)}
         <div class="flex items-center gap-4 py-2">
           <div class="flex-1 min-w-0">
             {#if editingId === p.id}
@@ -102,7 +159,7 @@
           </div>
         </div>
       {/each}
-      {#if db.patients.length===0}
+      {#if sortedPatients.length===0}
         <div class="py-8 text-center text-gray-500">אין מטופלים</div>
       {/if}
     </div>

@@ -84,13 +84,13 @@
   {#if groupId}
     <div class="bg-white rounded-lg shadow p-4">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold">עריכת קבוצה</h2>
         <button 
           class="text-blue-600 hover:underline text-sm" 
           on:click={backToList}
         >
           חזרה לרשימה
         </button>
+        <h2 class="text-lg font-semibold">עריכת קבוצה</h2>
       </div>
     </div>
   {/if}

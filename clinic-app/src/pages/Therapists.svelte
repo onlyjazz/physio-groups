@@ -1,9 +1,13 @@
 <script lang="ts">
   import { load, save, api, type Db } from '../lib/db'
+  import { exportToCSV } from '../lib/csvExport'
   let db: Db = load()
   let name = ''
   let editingId = ''
   let editingName = ''
+  
+  // Sorting state
+  let sortDirection: 'asc' | 'desc' = 'asc'
   
   function add() { if (!name.trim()) return; api.addTherapist(db, name.trim()); name=''; db = load() }
   function del(id: string) { if (confirm('למחוק מטפל/ת?')) { api.removeTherapist(db,id); db=load() } }
@@ -22,20 +26,68 @@
     editingName = ''
     db = load()
   }
+  
+  // Sorting function
+  function toggleSort() {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+  }
+  
+  // Get sorted therapists
+  $: sortedTherapists = (() => {
+    const therapists = [...db.therapists]
+    return therapists.sort((a, b) => {
+      const compareValue = (a.name || '').localeCompare(b.name || '', 'he')
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+  })()
+  
+  // Export function
+  function exportTherapists() {
+    const exportData = sortedTherapists.map(t => ({
+      'שם מטפל/ת': t.name
+    }))
+    exportToCSV(exportData, 'therapists')
+  }
 </script>
 
 <section class="space-y-6">
   <div class="bg-white rounded-lg shadow p-4">
-    <h2 class="text-lg font-semibold mb-4">מטפל/ת</h2>
+    <div class="flex justify-between items-center mb-4">
+      <button 
+        class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+        on:click={exportTherapists}
+      >
+        ייצוא
+      </button>
+      <h2 class="text-lg font-semibold">מטפל/ת</h2>
+    </div>
     <form class="flex items-center gap-3" on:submit|preventDefault={add}>
       <input class="input input-bordered grow rtl:text-right border rounded px-3 h-10" placeholder="שם מלא" bind:value={name}/>
-      <button class="button bg-blue-600 text-white rounded px-4 h-10 hover:bg-blue-700">הוסף/י</button>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700" style="border-radius: 0.375rem; height: 2.5rem;">הוסף/י</button>
     </form>
   </div>
 
   <div class="bg-white rounded-lg shadow p-4">
+    <!-- Header row -->
+    <div class="flex items-center justify-between py-2 border-b mb-2">
+      <div class="flex-1 max-w-sm">
+        <button 
+          class="py-1 px-2 inline-flex items-center"
+          on:click={toggleSort}
+        >
+          <span class="text-gray-700 font-semibold text-sm">שם מטפל/ת</span>
+          <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
+          </svg>
+        </button>
+      </div>
+      <div class="flex gap-1 min-w-[80px] justify-end">
+        <!-- Empty space for action buttons column -->
+      </div>
+    </div>
+    
     <div class="space-y-2">
-      {#each db.therapists as t (t.id)}
+      {#each sortedTherapists as t (t.id)}
         <div class="flex items-center justify-between py-2">
           <div class="flex-1 max-w-sm">
             {#if editingId === t.id}
@@ -73,7 +125,7 @@
           </div>
         </div>
       {/each}
-      {#if db.therapists.length === 0}
+      {#if sortedTherapists.length === 0}
         <div class="py-8 text-center text-gray-500">אין מטפלים</div>
       {/if}
     </div>

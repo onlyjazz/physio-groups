@@ -2,6 +2,7 @@
   import { load, api, type Db } from '../lib/db'
   import { route } from '../router'
   import { goto } from '../router'
+  import { exportToCSV } from '../lib/csvExport'
   
   let db: Db = load()
   
@@ -43,23 +44,43 @@
       day: 'numeric' 
     })
   }
+  
+  // Export function
+  function exportAttendance() {
+    if (!group || !patientsInGroup.length) return
+    
+    const exportData = patientsInGroup.map(pg => {
+      const patient = db.patients.find(p => p.id === pg.patientId)
+      return patient ? {
+        'שם פרטי': patient.firstName,
+        'שם משפחה': patient.lastName,
+        'ת.ז.': patient.nationalId,
+        'טלפון': patient.phone,
+        'נוכח': attendanceSet.has(patient.id) ? 'כן' : 'לא',
+        'תאריך': selectedDate,
+        'קבוצה': group.name
+      } : null
+    }).filter(Boolean)
+    
+    exportToCSV(exportData, `attendance_${group.name}_${selectedDate}`)
+  }
 </script>
 
 <section class="space-y-6">
   {#if group}
     <div class="bg-white rounded-lg shadow p-4">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold">נוכחות - {group.name}</h2>
         <button 
           class="text-blue-600 hover:underline text-sm" 
           on:click={backToList}
         >
           חזרה לרשימה
         </button>
+        <h2 class="text-lg font-semibold">נוכחות - {group.name}</h2>
       </div>
       
-      <div class="flex items-center gap-4 mb-4">
-        <label for="date" class="text-sm text-gray-600">תאריך:</label>
+      <div class="flex items-center gap-4 mb-4 justify-end">
+        <div class="text-sm text-gray-600" dir="rtl">{formatDate(selectedDate)}</div>
         <input 
           id="date"
           type="date" 
@@ -67,12 +88,20 @@
           bind:value={selectedDate}
           on:change={() => db = load()}
         />
-        <span class="text-sm text-gray-600">{formatDate(selectedDate)}</span>
+        <label for="date" class="text-sm text-gray-600">תאריך:</label>
       </div>
     </div>
     
     <div class="bg-white rounded-lg shadow p-4">
-      <h3 class="text-base font-semibold mb-4">רשימת מטופלים</h3>
+      <div class="flex justify-between items-center mb-4">
+        <button 
+          class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          on:click={exportAttendance}
+        >
+          ייצוא
+        </button>
+        <h3 class="text-base font-semibold">רשימת מטופלים</h3>
+      </div>
       
       {#if patientsInGroup.length === 0}
         <p class="text-gray-500 text-center py-8">אין מטופלים רשומים לקבוצה זו</p>
@@ -90,14 +119,14 @@
                     ת.ז. {patient.nationalId}
                   </span>
                 </div>
-                <label class="flex items-center cursor-pointer">
+                <label class="flex items-center cursor-pointer gap-2">
                   <input 
                     type="checkbox" 
                     class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                     checked={attendanceSet.has(patient.id)}
                     on:change={() => toggleAttendance(patient.id)}
                   />
-                  <span class="mr-2 text-sm text-gray-600">נוכח/ת</span>
+                  <span class="text-sm text-gray-600">נוכח/ת</span>
                 </label>
               </div>
             {/if}
