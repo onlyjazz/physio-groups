@@ -24,12 +24,6 @@
     db = load()
   }
   
-  function del(id: string) {
-    if (confirm('למחוק קבוצה?')) {
-      api.removeGroup(db, id)
-      db = load()
-    }
-  }
   
   function editGroup(id: string) {
     goto(`groups/${id}`)
@@ -139,9 +133,7 @@
         />
         <label for="group-capacity" class="text-sm text-gray-500 whitespace-nowrap">קיבולת</label>
       </div>
-      <div class="flex justify-center">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700" style="border-radius: 0.375rem;">צור קבוצה</button>
-      </div>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 rounded-md" style="height: 2.5rem; background-color: #2563eb; color: white; display: flex; align-items: center; justify-content: center;">הוסף/י קבוצה חדשה</button>
     </form>
   </div>
 
@@ -203,10 +195,14 @@
       {#each sortedGroups as g (g.id)}
         {@const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === g.id)}
         {@const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null}
+        {@const currentPatientCount = db.patientsInGroups.filter(x => x.groupId === g.id).length}
+        {@const realAvailable = (g.capacity || 15) - currentPatientCount}
         <div class="flex items-center py-2">
           <div class="flex-1 grid" style="grid-template-columns: 50px minmax(100px, 1fr) minmax(100px, 1fr) 3fr;">
             <div class="text-gray-600 text-center">
-              <span>{g.available || 15}</span>
+              <span class="{realAvailable <= 0 ? 'text-red-600 font-bold' : realAvailable <= 3 ? 'text-orange-500' : ''}">
+                {realAvailable}
+              </span>
             </div>
             <div class="text-gray-600 text-center">
               <span>{therapist ? therapist.name : '-'}</span>
@@ -237,16 +233,6 @@
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-            <button 
-              class="text-red-600 hover:text-red-700 p-0.5"
-              on:click={() => del(g.id)}
-              title="מחק"
-              aria-label="מחק"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
           </div>

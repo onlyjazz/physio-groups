@@ -4,9 +4,9 @@ export interface Status { id: ID; code: 'active'|'inactive' }
 export interface Therapist { id: ID; name: string; createdAt: number; updatedAt: number; statusId: ID }
 export interface Patient { id: ID; nationalId: string; phone: string; firstName: string; lastName: string; createdAt: number; updatedAt: number; statusId: ID }
 export interface Group { id: ID; name: string; capacity: number; available: number; when: string; createdAt: number; updatedAt: number }
-export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; createdAt: number; updatedAt: number; statusId: ID }
+export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; enrolled: number; createdAt: number; updatedAt: number; statusId: ID }
 export interface TherapistsInGroups { id: ID; therapistId: ID; groupId: ID; createdAt: number; updatedAt: number; statusId: ID }
-export interface Attendance { id: ID; patientId: ID; groupId: ID; date: string; createdAt: number }
+export interface Attendance { id: ID; patientId: ID; groupId: ID; therapistId: ID; date: string; createdAt: number }
 
 export interface Db {
   statuses: Status[]
@@ -29,6 +29,15 @@ export function load(): Db {
     // Handle migration: add attendance array if missing
     if (!parsed.attendance) {
       parsed.attendance = []
+    }
+    // Handle migration: add enrolled field to existing patientsInGroups
+    if (parsed.patientsInGroups) {
+      parsed.patientsInGroups = parsed.patientsInGroups.map((pig: any) => {
+        if (pig.enrolled === undefined) {
+          return { ...pig, enrolled: 1 } // Assume existing patients are enrolled
+        }
+        return pig
+      })
     }
     return parsed
   }
@@ -115,11 +124,65 @@ export const api = {
   },
   addPatientToGroup(db: Db, groupId: ID, patientId: ID, receipt?: string) {
     if (db.patientsInGroups.some(x => x.groupId === groupId && x.patientId === patientId)) return
-    db.patientsInGroups.push({ id: uid(), patientId, groupId, receipt, createdAt: Date.now(), updatedAt: Date.now(), statusId: findStatusId(db, 'active') })
+    
+    // Check current enrollment count (only enrolled patients, not waitlisted)
+    const group = db.groups.find(g => g.id === groupId)
+    if (!group) return
+    
+    const enrolledCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
+    const hasAvailability = enrolledCount < group.capacity
+    
+    // Set enrolled to 1 if there's availability, 0 for waitlist
+    const enrolled = hasAvailability ? 1 : 0
+    
+    db.patientsInGroups.push({ 
+      id: uid(), 
+      patientId, 
+      groupId, 
+      receipt, 
+      enrolled,
+      createdAt: Date.now(), 
+      updatedAt: Date.now(), 
+      statusId: findStatusId(db, 'active') 
+    })
+    
+    // Update available count if patient is enrolled (not waitlisted)
+    if (enrolled === 1) {
+      const newAvailable = group.capacity - (enrolledCount + 1)
+      group.available = newAvailable
+      group.updatedAt = Date.now()
+    }
+    
     save(db)
   },
   removePatientFromGroup(db: Db, groupId: ID, patientId: ID) {
+    const patientInGroup = db.patientsInGroups.find(x => x.groupId === groupId && x.patientId === patientId)
+    const wasEnrolled = patientInGroup?.enrolled === 1
+    
     db.patientsInGroups = db.patientsInGroups.filter(x => !(x.groupId === groupId && x.patientId === patientId))
+    
+    // If an enrolled patient is removed, check if we should move someone from waitlist
+    if (wasEnrolled) {
+      const group = db.groups.find(g => g.id === groupId)
+      if (group) {
+        // Find oldest waitlisted patient
+        const waitlisted = db.patientsInGroups
+          .filter(x => x.groupId === groupId && x.enrolled === 0)
+          .sort((a, b) => a.createdAt - b.createdAt)[0]
+        
+        if (waitlisted) {
+          // Move from waitlist to enrolled
+          waitlisted.enrolled = 1
+          waitlisted.updatedAt = Date.now()
+        } else {
+          // No one on waitlist, update available count
+          const enrolledCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
+          group.available = group.capacity - enrolledCount
+          group.updatedAt = Date.now()
+        }
+      }
+    }
+    
     save(db)
   },
   updatePatientReceipt(db: Db, groupId: ID, patientId: ID, receipt: string) {
@@ -131,17 +194,23 @@ export const api = {
   },
 
   // Attendance operations
-  markAttendance(db: Db, groupId: ID, patientId: ID, date: string) {
+  markAttendance(db: Db, groupId: ID, patientId: ID, therapistId: ID, date: string) {
     // Check if attendance already exists for this patient, group, and date
     const existing = db.attendance.find(a => 
       a.groupId === groupId && a.patientId === patientId && a.date === date
     )
-    if (existing) return // Already marked
+    if (existing) {
+      // Update the therapist if attendance already exists
+      existing.therapistId = therapistId
+      save(db)
+      return
+    }
     
     db.attendance.push({
       id: uid(),
       patientId,
       groupId,
+      therapistId,
       date,
       createdAt: Date.now()
     })

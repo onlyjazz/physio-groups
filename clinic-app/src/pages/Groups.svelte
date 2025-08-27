@@ -60,7 +60,10 @@
   }
   function addPatient(groupId: string, patientId: string) {
     if (!patientId) return
-    api.addPatientToGroup(db, groupId, patientId); 
+    
+    // The API now handles enrollment vs waitlist logic
+    api.addPatientToGroup(db, groupId, patientId)
+    
     db=load()
     // Reset the dropdown
     setTimeout(() => {
@@ -69,7 +72,9 @@
     }, 100)
   }
   function removePatient(groupId: string, patientId: string) {
-    api.removePatientFromGroup(db, groupId, patientId); db=load()
+    // The API now handles availability updates and waitlist promotion
+    api.removePatientFromGroup(db, groupId, patientId)
+    db=load()
   }
   function updateReceipt(groupId: string, patientId: string, newReceipt: string) {
     api.updatePatientReceipt(db, groupId, patientId, newReceipt); db=load()
@@ -133,13 +138,13 @@
         {#if editingGroupId === g.id}
           <input class="w-16 border rounded px-2 py-1 text-sm text-right" type="number" bind:value={editingGroupCapacity}/>
         {:else}
-          <span class="w-16 text-sm">{g.capacity || 15}</span>
+          <span class="w-16 text-sm">{g.capacity}</span>
         {/if}
         <span class="text-sm text-gray-500 whitespace-nowrap ml-1">קיבולת</span>
         {#if editingGroupId === g.id}
           <input class="w-16 border rounded px-2 py-1 text-sm text-right" type="number" bind:value={editingGroupAvailable}/>
         {:else}
-          <span class="w-16 text-sm">{g.available || 15}</span>
+          <span class="w-16 text-sm">{g.available}</span>
         {/if}
         <span class="text-sm text-gray-500 whitespace-nowrap ml-1">פנוי</span>
         {#if editingGroupId === g.id}
@@ -163,12 +168,19 @@
         <ul class="space-y-2">
           {#each db.patientsInGroups.filter(x=>x.groupId===g.id) as row (row.id)}
             <li class="bg-gray-50 p-3 rounded border">
-              <div class="flex items-center justify-end gap-3 mb-2">
-                <button class="text-red-600 hover:underline text-sm" on:click={() => removePatient(g.id,row.patientId)}>הסר/י</button>
-                <span class="font-medium">
-                  {db.patients.find(p=>p.id===row.patientId)?.firstName}
-                  {db.patients.find(p=>p.id===row.patientId)?.lastName}
-                </span>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  {#if row.enrolled === 0}
+                    <span class="text-orange-500 text-sm font-medium">ממתינים</span>
+                  {/if}
+                </div>
+                <div class="flex items-center gap-3">
+                  <button class="text-red-600 hover:underline text-sm" on:click={() => removePatient(g.id,row.patientId)}>הסר/י</button>
+                  <span class="font-medium">
+                    {db.patients.find(p=>p.id===row.patientId)?.firstName}
+                    {db.patients.find(p=>p.id===row.patientId)?.lastName}
+                  </span>
+                </div>
               </div>
               <div class="flex items-center gap-2 justify-end">
                 <input 

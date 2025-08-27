@@ -45,9 +45,9 @@
       <div class="flex items-center">
         <button 
           class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 
-          on:click={() => goto('/groupsList')}
+          on:click={() => goto('/waitlist')}
         >
-          קבוצות
+          ממתינים
         </button>
         <div class="h-6 w-px bg-gray-300"></div>
         
@@ -64,6 +64,14 @@
           on:click={() => goto('/therapists')}
         >
           מטפלים
+        </button>
+        <div class="h-6 w-px bg-gray-300"></div>
+        
+        <button 
+          class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 
+          on:click={() => goto('/groupsList')}
+        >
+          קבוצות
         </button>
         <div class="h-6 w-px bg-gray-300"></div>
         

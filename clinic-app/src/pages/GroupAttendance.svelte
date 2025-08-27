@@ -13,20 +13,35 @@
   // Get today's date in YYYY-MM-DD format
   let selectedDate = new Date().toISOString().split('T')[0]
   
-  // Get patients in this group
-  $: patientsInGroup = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId) : []
+  // Get patients in this group (only enrolled, not waitlisted)
+  $: patientsInGroup = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1) : []
+  
+  // Get the default therapist for this group
+  $: defaultTherapistId = groupId ? 
+    db.therapistsInGroups.find(x => x.groupId === groupId)?.therapistId || '' : ''
+  
+  // Selected therapist (defaults to group's assigned therapist)
+  let selectedTherapistId = ''
+  $: if (defaultTherapistId && !selectedTherapistId) {
+    selectedTherapistId = defaultTherapistId
+  }
   
   // Get attendance for selected date
   $: attendanceSet = groupId && selectedDate ? 
     api.getAttendanceForGroupAndDate(db, groupId, selectedDate) : new Set()
   
   function toggleAttendance(patientId: string) {
-    if (!groupId || !selectedDate) return
+    if (!groupId || !selectedDate || !selectedTherapistId) {
+      if (!selectedTherapistId) {
+        alert('נא לבחור מטפל/ת')
+      }
+      return
+    }
     
     if (attendanceSet.has(patientId)) {
       api.unmarkAttendance(db, groupId, patientId, selectedDate)
     } else {
-      api.markAttendance(db, groupId, patientId, selectedDate)
+      api.markAttendance(db, groupId, patientId, selectedTherapistId, selectedDate)
     }
     
     db = load()
@@ -79,16 +94,41 @@
         <h2 class="text-lg font-semibold">נוכחות - {group.name}</h2>
       </div>
       
-      <div class="flex items-center gap-4 mb-4 justify-end">
-        <div class="text-sm text-gray-600" dir="rtl">{formatDate(selectedDate)}</div>
-        <input 
-          id="date"
-          type="date" 
-          class="border rounded px-3 py-2"
-          bind:value={selectedDate}
-          on:change={() => db = load()}
-        />
-        <label for="date" class="text-sm text-gray-600">תאריך:</label>
+      <div class="space-y-3 mb-4">
+        <div class="flex items-center gap-4 justify-end">
+          <div class="text-sm text-gray-600" dir="rtl">{formatDate(selectedDate)}</div>
+          <input 
+            id="date"
+            type="date" 
+            class="border rounded px-3 py-2"
+            bind:value={selectedDate}
+            on:change={() => db = load()}
+          />
+          <label for="date" class="text-sm text-gray-600">תאריך:</label>
+        </div>
+        
+        <div class="flex items-center gap-4 justify-end">
+          {#if selectedTherapistId !== defaultTherapistId && selectedTherapistId !== ''}
+            <span class="text-xs text-orange-600 font-medium">מטפל/ת מחליף/ה</span>
+          {/if}
+          <select 
+            id="therapist"
+            class="border rounded px-3 py-2 min-w-[200px] text-right"
+            bind:value={selectedTherapistId}
+            dir="rtl"
+          >
+            <option value="" disabled>בחר/י מטפל/ת</option>
+            {#each db.therapists as therapist}
+              <option value={therapist.id}>
+                {therapist.name}
+                {#if therapist.id === defaultTherapistId}
+                  (מטפל/ת קבוע/ה)
+                {/if}
+              </option>
+            {/each}
+          </select>
+          <label for="therapist" class="text-sm text-gray-600">מטפל/ת:</label>
+        </div>
       </div>
     </div>
     

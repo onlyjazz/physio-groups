@@ -6,13 +6,15 @@
   import Groups from './pages/Groups.svelte'
   import GroupsList from './pages/GroupsList.svelte'
   import GroupAttendance from './pages/GroupAttendance.svelte'
+  import Waitlist from './pages/Waitlist.svelte'
 
   const routes: Record<string, any> = {
     therapists: Therapists,
     patients: Patients,
     groups: Groups,
     groupsList: GroupsList,
-    groupAttendance: GroupAttendance
+    groupAttendance: GroupAttendance,
+    waitlist: Waitlist
   }
 
   $: current = $route
