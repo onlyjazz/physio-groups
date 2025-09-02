@@ -76,6 +76,14 @@
         <div class="h-6 w-px bg-gray-300"></div>
         
         <button 
+          class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 
+          on:click={() => goto('/monthlyReport')}
+        >
+          דוח חודשי
+        </button>
+        <div class="h-6 w-px bg-gray-300"></div>
+        
+        <button 
           class="px-4 text-sm text-green-600 hover:text-green-700 hover:bg-white py-3 font-medium transition-colors" 
           on:click={exportBackup}
         >

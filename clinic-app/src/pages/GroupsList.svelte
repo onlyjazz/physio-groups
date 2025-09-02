@@ -133,7 +133,7 @@
         />
         <label for="group-capacity" class="text-sm text-gray-500 whitespace-nowrap">קיבולת</label>
       </div>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 rounded-md" style="height: 2.5rem; background-color: #2563eb; color: white; display: flex; align-items: center; justify-content: center;">הוסף/י קבוצה חדשה</button>
+      <button type="submit" class="big-blue-button">הוסף/י קבוצה חדשה</button>
     </form>
   </div>
 

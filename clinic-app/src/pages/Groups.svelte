@@ -107,9 +107,9 @@
   {#each displayGroups as g (g.id)}
     <div class="bg-white rounded-lg shadow p-4 space-y-3">
       <div class="flex items-center gap-3">
-        <h3 class="text-base font-semibold ml-auto">
+        <h3 class="text-base font-semibold ml-auto flex-1">
           {#if editingGroupId === g.id}
-            <input class="border rounded px-2 py-1 text-right" bind:value={editingGroupName} on:keydown={(e) => e.key === 'Enter' && saveEditGroup()}/>
+            <input class="border rounded px-3 py-1 text-right w-full h-10" bind:value={editingGroupName} on:keydown={(e) => e.key === 'Enter' && saveEditGroup()}/>
           {:else}
             {g.name}
           {/if}
