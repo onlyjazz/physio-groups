@@ -1,0 +1,55 @@
+/* RTL Support using CSS Logical Properties */
+
+/* Replace margin-left/right with logical properties */
+.ml-1 { margin-inline-start: 0.25rem; }
+.ml-2 { margin-inline-start: 0.5rem; }
+.ml-3 { margin-inline-start: 0.75rem; }
+.ml-4 { margin-inline-start: 1rem; }
+.ml-6 { margin-inline-start: 1.5rem; }
+.ml-auto { margin-inline-start: auto; }
+
+.mr-1 { margin-inline-end: 0.25rem; }
+.mr-2 { margin-inline-end: 0.5rem; }
+.mr-3 { margin-inline-end: 0.75rem; }
+.mr-4 { margin-inline-end: 1rem; }
+
+/* Replace padding-left/right with logical properties */
+.pl-2 { padding-inline-start: 0.5rem; }
+.pl-3 { padding-inline-start: 0.75rem; }
+.pl-4 { padding-inline-start: 1rem; }
+
+.pr-2 { padding-inline-end: 0.5rem; }
+.pr-3 { padding-inline-end: 0.75rem; }
+.pr-4 { padding-inline-end: 1rem; }
+
+/* Text alignment for RTL */
+.text-left { text-align: start; }
+.text-right { text-align: end; }
+
+/* Flexbox RTL support */
+.justify-end { justify-content: flex-end; }
+.justify-start { justify-content: flex-start; }
+
+/* Float replacements */
+.float-left { float: inline-start; }
+.float-right { float: inline-end; }
+
+/* Border logical properties */
+.border-l { border-inline-start-width: 1px; }
+.border-r { border-inline-end-width: 1px; }
+
+/* Rounded corners logical */
+.rounded-l { 
+  border-start-start-radius: 0.25rem;
+  border-end-start-radius: 0.25rem;
+}
+.rounded-r { 
+  border-start-end-radius: 0.25rem;
+  border-end-end-radius: 0.25rem;
+}
+
+/* Additional RTL-aware utilities */
+[dir="rtl"] .rtl\:text-right { text-align: right !important; }
+[dir="rtl"] .rtl\:text-left { text-align: left !important; }
+[dir="rtl"] .rtl\:ml-auto { margin-left: auto !important; }
+[dir="rtl"] .rtl\:mr-auto { margin-right: auto !important; }
