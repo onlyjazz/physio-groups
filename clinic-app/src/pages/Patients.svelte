@@ -145,7 +145,7 @@
           dir="rtl" 
           tabindex="4"
         />
-        <button class="big-green-button" style="min-width: 100px;" tabindex="5">הוסף/י</button>
+        <button class="big-green-button" style="min-width: 90px;" tabindex="5">הוסף/י</button>
       </div>
     </form>
   </div>
@@ -171,29 +171,58 @@
     
     <div class="space-y-2">
       {#each filteredAndSortedPatients as p (p.id)}
-        <div class="flex items-center gap-4 py-2">
+        <div class="flex {editingId === p.id ? 'flex-row-reverse' : ''} items-center gap-4 py-2">
           <div class="flex-1 min-w-0">
             {#if editingId === p.id}
-              <div class="grid grid-cols-3 gap-2">
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingNationalId} placeholder="ת.ז." dir="rtl" tabindex="3"/>
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingLastName} placeholder="שם משפחה" dir="rtl" tabindex="2"/>
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingFirstName} placeholder="שם פרטי" dir="rtl" tabindex="1"/>
-              </div>
-              <div class="mt-2">
-                <input class="border rounded px-2 py-1 text-sm w-48" bind:value={editingPhone} placeholder="טלפון" dir="rtl" tabindex="4"/>
+              <div class="flex flex-row-reverse items-center gap-2">
+                <input 
+                  class="flex-1 border rounded px-3 py-1 text-sm" 
+                  style="text-align: right;"
+                  bind:value={editingFirstName} 
+                  placeholder="שם פרטי" 
+                  dir="rtl" 
+                  tabindex="1"
+                />
+                <input 
+                  class="border rounded px-3 py-1 text-sm" 
+                  style="text-align: right; min-width: 150px; flex: 0.8;"
+                  bind:value={editingLastName} 
+                  placeholder="שם משפחה" 
+                  dir="rtl" 
+                  tabindex="2"
+                />
+                <input 
+                  class="border rounded px-3 py-1 text-sm" 
+                  style="text-align: right; width: 120px;"
+                  bind:value={editingNationalId} 
+                  placeholder="ת.ז." 
+                  dir="rtl" 
+                  tabindex="3"
+                />
+                <input 
+                  class="border rounded px-3 py-1 text-sm" 
+                  style="text-align: right; width: 140px;"
+                  bind:value={editingPhone} 
+                  placeholder="טלפון" 
+                  dir="rtl" 
+                  tabindex="4"
+                />
               </div>
             {:else}
-              <div class="text-gray-900">
-                <span class="font-medium">{p.firstName} {p.lastName}</span>
+              <button 
+                class="text-gray-900 text-left hover:bg-gray-50 rounded px-2 py-1 transition-colors"
+                on:click={() => goto(`/patientAttendance/${p.id}`)}
+              >
+                <span class="font-medium hover:text-blue-600">{p.firstName} {p.lastName}</span>
                 <span class="text-gray-600 text-sm mr-3">ת.ז. {p.nationalId}</span>
                 <span class="text-gray-600 text-sm">טל. {p.phone}</span>
-              </div>
+              </button>
             {/if}
           </div>
-          <div class="flex gap-1 min-w-[80px] justify-end">
+          <div class="flex gap-1" style="min-width: 90px;">
             {#if editingId === p.id}
-              <button class="big-blue-button" style="height: auto; padding: 0.25rem 0.75rem; font-size: 0.875rem;" on:click={saveEdit}>שמור</button>
-              <button class="big-orange-button" style="height: auto; padding: 0.25rem 0.75rem; font-size: 0.875rem;" on:click={cancelEdit}>ביטול</button>
+              <button class="big-blue-button" style="height: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;" on:click={saveEdit}>שמור</button>
+              <button class="big-orange-button" style="height: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;" on:click={cancelEdit}>ביטול</button>
             {:else}
               <button 
                 class="text-green-600 hover:text-green-700 p-1" 
@@ -213,6 +242,16 @@
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button 
+                class="text-indigo-600 hover:text-indigo-700 p-1" 
+                on:click={() => goto(`/groupsForPatient/${p.id}`)}
+                title="קבוצות"
+                aria-label="קבוצות"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </button>
               <button 

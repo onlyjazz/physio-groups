@@ -10,6 +10,9 @@
   import MonthlyReport from './pages/MonthlyReport.svelte'
   import Registration from './pages/Registration.svelte'
   import History from './pages/History.svelte'
+  import PatientsInGroup from './pages/PatientsInGroup.svelte'
+  import GroupsForPatient from './pages/GroupsForPatient.svelte'
+  import PatientAttendance from './pages/PatientAttendance.svelte'
 
   const routes: Record<string, any> = {
     therapists: Therapists,
@@ -20,7 +23,10 @@
     waitlist: Waitlist,
     monthlyReport: MonthlyReport,
     registration: Registration,
-    history: History
+    history: History,
+    patientsInGroup: PatientsInGroup,
+    groupsForPatient: GroupsForPatient,
+    patientAttendance: PatientAttendance
   }
 
   $: current = $route

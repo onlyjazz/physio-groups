@@ -8,6 +8,7 @@
   let capacity = 15
   let available = 15
   let when = 'open'
+  let searchQuery = ''
   
   // Sorting state
   let sortField: 'name' | 'therapist' | 'when' | 'available' | null = null
@@ -33,6 +34,10 @@
     goto(`groupAttendance/${id}`)
   }
   
+  function viewPatients(id: string) {
+    goto(`patientsInGroup/${id}`)
+  }
+  
   // Sorting function
   function sortBy(field: 'name' | 'therapist' | 'when' | 'available') {
     if (sortField === field) {
@@ -43,11 +48,35 @@
     }
   }
   
-  // Get sorted groups
-  $: sortedGroups = (() => {
-    if (!sortField) return db.groups
+  // Filter groups based on search
+  $: filteredGroups = (() => {
+    if (!searchQuery.trim()) return db.groups
     
-    const groups = [...db.groups]
+    const query = searchQuery.toLowerCase()
+    return db.groups.filter(group => {
+      // Search in group name
+      if (group.name?.toLowerCase().includes(query)) return true
+      
+      // Search in when field
+      if (group.when?.toLowerCase().includes(query)) return true
+      
+      // Search in therapist name
+      const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === group.id)
+      if (therapistInGroup) {
+        const therapist = db.therapists.find(t => t.id === therapistInGroup.therapistId)
+        if (therapist?.name?.toLowerCase().includes(query)) return true
+      }
+      
+      return false
+    })
+  })()
+  
+  // Get sorted and filtered groups
+  $: sortedGroups = (() => {
+    const groups = [...filteredGroups]
+    
+    if (!sortField) return groups
+    
     return groups.sort((a, b) => {
       let compareValue = 0
       
@@ -62,7 +91,9 @@
       } else if (sortField === 'when') {
         compareValue = (a.when || '').localeCompare(b.when || '', 'he')
       } else if (sortField === 'available') {
-        compareValue = (a.available || 15) - (b.available || 15)
+        const availableA = (a.capacity || 15) - db.patientsInGroups.filter(x => x.groupId === a.id && x.enrolled === 1).length
+        const availableB = (b.capacity || 15) - db.patientsInGroups.filter(x => x.groupId === b.id && x.enrolled === 1).length
+        compareValue = availableA - availableB
       }
       
       return sortDirection === 'asc' ? compareValue : -compareValue
@@ -96,6 +127,18 @@
         ייצוא
       </button>
       <h2 class="text-lg font-semibold">קבוצות</h2>
+    </div>
+    
+    <!-- Search box -->
+    <div class="mb-3">
+      <input
+        type="text"
+        class="w-full border rounded-full px-4 py-2 text-sm"
+        style="text-align: right;"
+        placeholder="חיפוש..."
+        bind:value={searchQuery}
+        dir="rtl"
+      />
     </div>
     <form on:submit|preventDefault={add}>
       <div class="flex flex-row-reverse items-center gap-2">
@@ -200,8 +243,8 @@
       {#each sortedGroups as g (g.id)}
         {@const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === g.id)}
         {@const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null}
-        {@const currentPatientCount = db.patientsInGroups.filter(x => x.groupId === g.id).length}
-        {@const realAvailable = (g.capacity || 15) - currentPatientCount}
+        {@const enrolledPatientCount = db.patientsInGroups.filter(x => x.groupId === g.id && x.enrolled === 1).length}
+        {@const realAvailable = (g.capacity || 15) - enrolledPatientCount}
         <div class="flex items-center py-2">
           <div class="flex-1 grid" style="grid-template-columns: 50px minmax(100px, 1fr) minmax(100px, 1fr) 3fr;">
             <div class="text-gray-600 text-center">
@@ -220,6 +263,16 @@
             </div>
           </div>
           <div class="flex gap-0.5 w-[150px] justify-end">
+            <button 
+              class="text-indigo-600 hover:text-indigo-700 p-0.5"
+              on:click={() => viewPatients(g.id)}
+              title="מטופלים"
+              aria-label="מטופלים"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
             <button 
               class="text-green-600 hover:text-green-700 p-0.5"
               on:click={() => attendanceGroup(g.id)}
@@ -244,7 +297,13 @@
         </div>
       {/each}
       {#if sortedGroups.length === 0}
-        <div class="py-8 text-center text-gray-500">אין קבוצות</div>
+        <div class="py-8 text-center text-gray-500">
+          {#if searchQuery.trim()}
+            לא נמצאו תוצאות עבור "{searchQuery}"
+          {:else}
+            אין קבוצות
+          {/if}
+        </div>
       {/if}
     </div>
   </div>

@@ -22,6 +22,10 @@
   
   // Get selected group details
   $: selectedGroup = selectedGroupId ? db.groups.find(g => g.id === selectedGroupId) : null
+  $: selectedGroupEnrolled = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 1).length : 0
+  $: selectedGroupWaitlist = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 0).length : 0
+  $: selectedGroupAvailable = selectedGroup ? selectedGroup.capacity - selectedGroupEnrolled : 0
+  $: patientAlreadyInGroup = patientId && selectedGroupId ? db.patientsInGroups.find(x => x.groupId === selectedGroupId && x.patientId === patientId) : null
   
   // Generate month options
   const months = [
@@ -53,6 +57,20 @@
     const [year, month, day] = paymentDate.split('-')
     const formattedPaymentDate = `${day}/${month}/${year}`
     
+    // First check if patient is already in the group
+    const alreadyInGroup = db.patientsInGroups.some(
+      pig => pig.patientId === patientId && pig.groupId === selectedGroupId
+    )
+    
+    // If not already in group, add them
+    if (!alreadyInGroup) {
+      api.addPatientToGroup(db, selectedGroupId, patientId, receiptNumber)
+    } else {
+      // If already in group, update their receipt number
+      api.updatePatientReceipt(db, selectedGroupId, patientId, receiptNumber)
+    }
+    
+    // Add the payment record
     api.addPayment(db, {
       patientId,
       groupId: selectedGroupId,
@@ -64,7 +82,7 @@
       receiptNumber
     })
     
-    alert('התשלום נרשם בהצלחה')
+    alert('התשלום והרישום נרשמו בהצלחה')
     
     // Reset form
     amount = 0
@@ -159,6 +177,17 @@
               <div><span class="font-medium">{selectedGroup.name}</span></div>
               <div class="text-sm text-gray-600">מתי: {selectedGroup.when || '-'}</div>
               <div class="text-sm text-gray-600">קיבולת: {selectedGroup.capacity}</div>
+              <div class="text-sm font-medium {selectedGroupAvailable <= 0 ? 'text-red-600' : selectedGroupAvailable <= 3 ? 'text-orange-500' : 'text-green-600'}">
+                מקומות פנויים: {selectedGroupAvailable}
+              </div>
+              {#if selectedGroupWaitlist > 0}
+                <div class="text-sm text-orange-600">ממתינים: {selectedGroupWaitlist}</div>
+              {/if}
+              {#if patientAlreadyInGroup}
+                <div class="text-sm font-medium text-blue-600">
+                  {patientAlreadyInGroup.enrolled === 1 ? '✓ המטופל רשום בקבוצה' : '⏱ המטופל ברשימת המתנה'}
+                </div>
+              {/if}
             </div>
           </div>
         {/if}
@@ -211,7 +240,7 @@
           class="big-green-button"
           on:click={savePayment}
         >
-          שמור תשלום
+          {patientAlreadyInGroup ? 'שמור תשלום' : selectedGroupAvailable <= 0 ? 'שמור תשלום ורישום לרשימת המתנה' : 'שמור תשלום ורישום לקבוצה'}
         </button>
       </div>
     </div>

@@ -10,6 +10,11 @@
   $: group = groupId ? db.groups.find(g => g.id === groupId) : null
   $: therapistInGroup = groupId ? db.therapistsInGroups.find(x => x.groupId === groupId) : null
   
+  // Calculate stats
+  $: enrolledCount = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length : 0
+  $: waitlistCount = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 0).length : 0
+  $: availableSpots = group ? group.capacity - enrolledCount : 0
+  
   // Edit form state
   let editing = false
   let editName = ''
@@ -154,7 +159,7 @@
           />
         {:else}
           <div class="w-20 px-3 py-2 text-center">
-            <span>{group.available}</span>
+            <span>{availableSpots}</span>
           </div>
         {/if}
         
@@ -211,19 +216,19 @@
         <div class="grid grid-cols-3 gap-4 text-center">
           <div>
             <div class="text-2xl font-bold text-blue-600">
-              {db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length}
+              {enrolledCount}
             </div>
             <div class="text-sm text-gray-500">רשומים</div>
           </div>
           <div>
             <div class="text-2xl font-bold text-orange-600">
-              {db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 0).length}
+              {waitlistCount}
             </div>
             <div class="text-sm text-gray-500">ממתינים</div>
           </div>
           <div>
-            <div class="text-2xl font-bold text-green-600">
-              {group.available}
+            <div class="text-2xl font-bold {availableSpots <= 0 ? 'text-red-600' : availableSpots <= 3 ? 'text-orange-600' : 'text-green-600'}">
+              {availableSpots}
             </div>
             <div class="text-sm text-gray-500">מקומות פנויים</div>
           </div>
