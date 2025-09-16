@@ -33,7 +33,7 @@
   function toggleAttendance(patientId: string) {
     if (!groupId || !selectedDate || !selectedTherapistId) {
       if (!selectedTherapistId) {
-        alert('נא לבחור מטפל/ת')
+        alert('נא לבחור מנחה')
       }
       return
     }
@@ -109,7 +109,7 @@
         
         <div class="flex items-center gap-4 justify-end">
           {#if selectedTherapistId !== defaultTherapistId && selectedTherapistId !== ''}
-            <span class="text-xs text-orange-600 font-medium">מטפל/ת מחליף/ה</span>
+            <span class="text-xs text-orange-600 font-medium">מנחה מחליף/ה</span>
           {/if}
           <select 
             id="therapist"
@@ -117,17 +117,17 @@
             bind:value={selectedTherapistId}
             dir="rtl"
           >
-            <option value="" disabled>בחר/י מטפל/ת</option>
+            <option value="" disabled>בחר/י מנחה</option>
             {#each db.therapists as therapist}
               <option value={therapist.id}>
                 {therapist.name}
                 {#if therapist.id === defaultTherapistId}
-                  (מטפל/ת קבוע/ה)
+                  (מנחה קבוע/ה)
                 {/if}
               </option>
             {/each}
           </select>
-          <label for="therapist" class="text-sm text-gray-600">מטפל/ת:</label>
+          <label for="therapist" class="text-sm text-gray-600">מנחה:</label>
         </div>
       </div>
     </div>

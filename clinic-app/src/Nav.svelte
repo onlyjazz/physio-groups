@@ -63,7 +63,7 @@
           class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 
           on:click={() => goto('/therapists')}
         >
-          מטפלים
+          מנחים
         </button>
         <div class="h-6 w-px bg-gray-300"></div>
         

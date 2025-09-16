@@ -1,10 +1,12 @@
 <script lang="ts">
   import { load, api, type Db, type Patient } from '../lib/db'
   import { exportToCSV } from '../lib/csvExport'
+  import { goto } from '../router'
   let db: Db = load()
   let firstName='', lastName='', nationalId='', phone=''
   let editingId = ''
   let editingFirstName = '', editingLastName = '', editingNationalId = '', editingPhone = ''
+  let searchQuery = ''
   
   // Sorting state
   let sortDirection: 'asc' | 'desc' = 'asc'
@@ -45,9 +47,26 @@
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
   }
   
-  // Get sorted patients
-  $: sortedPatients = (() => {
-    const patients = [...db.patients]
+  // Get filtered and sorted patients
+  $: filteredAndSortedPatients = (() => {
+    let patients = [...db.patients]
+    
+    // Apply search filter if query exists
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase()
+      patients = patients.filter(p => {
+        const searchableText = [
+          p.firstName || '',
+          p.lastName || '',
+          p.nationalId || '',
+          p.phone || ''
+        ].join(' ').toLowerCase()
+        
+        return searchableText.includes(query)
+      })
+    }
+    
+    // Apply sorting
     return patients.sort((a, b) => {
       const fullNameA = `${a.firstName || ''} ${a.lastName || ''}`
       const fullNameB = `${b.firstName || ''} ${b.lastName || ''}`
@@ -58,7 +77,7 @@
   
   // Export function
   function exportPatients() {
-    const exportData = sortedPatients.map(p => ({
+    const exportData = filteredAndSortedPatients.map(p => ({
       'שם פרטי': p.firstName,
       'שם משפחה': p.lastName,
       'ת.ז.': p.nationalId,
@@ -79,13 +98,54 @@
       </button>
       <h2 class="text-lg font-semibold">מטופלים</h2>
     </div>
-    <form class="grid grid-cols-12 gap-3" on:submit|preventDefault={add}>
-      <input class="col-span-3 border rounded px-3 h-10" placeholder="שם פרטי" bind:value={firstName}/>
-      <input class="col-span-3 border rounded px-3 h-10" placeholder="שם משפחה" bind:value={lastName}/>
-      <input class="col-span-3 border rounded px-3 h-10" placeholder="ת.ז." bind:value={nationalId}/>
-      <input class="col-span-3 border rounded px-3 h-10" placeholder="טלפון" bind:value={phone}/>
-      <div class="col-span-12">
-        <button class="button bg-blue-600 text-white rounded px-4 h-10 hover:bg-blue-700">הוסף/י</button>
+    
+    <!-- Search box -->
+    <div class="mb-3">
+      <input
+        type="text"
+        class="w-full border rounded-full px-4 py-2 text-sm"
+        style="text-align: right;"
+        placeholder="חיפוש..."
+        bind:value={searchQuery}
+        dir="rtl"
+      />
+    </div>
+    
+    <form on:submit|preventDefault={add}>
+      <div class="flex flex-row-reverse items-center gap-2">
+        <input 
+          class="flex-1 border rounded px-3 h-10" 
+          style="text-align: right;"
+          placeholder="שם פרטי" 
+          bind:value={firstName} 
+          dir="rtl" 
+          tabindex="1"
+        />
+        <input 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; min-width: 150px; flex: 0.8;"
+          placeholder="שם משפחה" 
+          bind:value={lastName} 
+          dir="rtl" 
+          tabindex="2"
+        />
+        <input 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; width: 120px;"
+          placeholder="ת.ז." 
+          bind:value={nationalId} 
+          dir="rtl" 
+          tabindex="3"
+        />
+        <input 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; width: 140px;"
+          placeholder="טלפון" 
+          bind:value={phone} 
+          dir="rtl" 
+          tabindex="4"
+        />
+        <button class="big-green-button" style="min-width: 100px;" tabindex="5">הוסף/י</button>
       </div>
     </form>
   </div>
@@ -110,17 +170,17 @@
     </div>
     
     <div class="space-y-2">
-      {#each sortedPatients as p (p.id)}
+      {#each filteredAndSortedPatients as p (p.id)}
         <div class="flex items-center gap-4 py-2">
           <div class="flex-1 min-w-0">
             {#if editingId === p.id}
               <div class="grid grid-cols-3 gap-2">
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingFirstName} placeholder="שם פרטי"/>
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingLastName} placeholder="שם משפחה"/>
-                <input class="border rounded px-2 py-1 text-sm" bind:value={editingNationalId} placeholder="ת.ז."/>
+                <input class="border rounded px-2 py-1 text-sm" bind:value={editingNationalId} placeholder="ת.ז." dir="rtl" tabindex="3"/>
+                <input class="border rounded px-2 py-1 text-sm" bind:value={editingLastName} placeholder="שם משפחה" dir="rtl" tabindex="2"/>
+                <input class="border rounded px-2 py-1 text-sm" bind:value={editingFirstName} placeholder="שם פרטי" dir="rtl" tabindex="1"/>
               </div>
               <div class="mt-2">
-                <input class="border rounded px-2 py-1 text-sm w-48" bind:value={editingPhone} placeholder="טלפון"/>
+                <input class="border rounded px-2 py-1 text-sm w-48" bind:value={editingPhone} placeholder="טלפון" dir="rtl" tabindex="4"/>
               </div>
             {:else}
               <div class="text-gray-900">
@@ -132,9 +192,29 @@
           </div>
           <div class="flex gap-1 min-w-[80px] justify-end">
             {#if editingId === p.id}
-              <button class="text-green-600 hover:underline text-sm" on:click={saveEdit}>שמור</button>
-              <button class="text-gray-600 hover:underline text-sm" on:click={cancelEdit}>ביטול</button>
+              <button class="big-blue-button" style="height: auto; padding: 0.25rem 0.75rem; font-size: 0.875rem;" on:click={saveEdit}>שמור</button>
+              <button class="big-orange-button" style="height: auto; padding: 0.25rem 0.75rem; font-size: 0.875rem;" on:click={cancelEdit}>ביטול</button>
             {:else}
+              <button 
+                class="text-green-600 hover:text-green-700 p-1" 
+                on:click={() => goto(`/registration/${p.id}`)}
+                title="רישום"
+                aria-label="רישום"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button 
+                class="text-purple-600 hover:text-purple-700 p-1" 
+                on:click={() => goto(`/history/${p.id}`)}
+                title="היסטוריה"
+                aria-label="היסטוריה"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
               <button 
                 class="text-blue-600 hover:text-blue-700 p-1" 
                 on:click={() => startEdit(p)}
@@ -159,8 +239,14 @@
           </div>
         </div>
       {/each}
-      {#if sortedPatients.length===0}
-        <div class="py-8 text-center text-gray-500">אין מטופלים</div>
+      {#if filteredAndSortedPatients.length===0}
+        <div class="py-8 text-center text-gray-500">
+          {#if searchQuery.trim()}
+            לא נמצאו תוצאות עבור "{searchQuery}"
+          {:else}
+            אין מטופלים
+          {/if}
+        </div>
       {/if}
     </div>
   </div>

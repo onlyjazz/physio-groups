@@ -7,6 +7,19 @@ export interface Group { id: ID; name: string; capacity: number; available: numb
 export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; enrolled: number; createdAt: number; updatedAt: number; statusId: ID }
 export interface TherapistsInGroups { id: ID; therapistId: ID; groupId: ID; createdAt: number; updatedAt: number; statusId: ID }
 export interface Attendance { id: ID; patientId: ID; groupId: ID; therapistId: ID; date: string; createdAt: number }
+export interface PatientPayment { 
+  id: ID; 
+  patientId: ID; 
+  groupId: ID; 
+  fromMonth: string;  // MM/YYYY
+  toMonth: string;    // MM/YYYY
+  paymentDate: string; // DD/MM/YYYY
+  amount: number;
+  paymentMethod: 'ק' | 'א' | 'ת' | 'מ'; // check, credit, cash, transfer
+  receiptNumber: string;
+  createdAt: number;
+  updatedAt: number;
+}
 
 export interface Db {
   statuses: Status[]
@@ -16,6 +29,7 @@ export interface Db {
   patientsInGroups: PatientsInGroups[]
   therapistsInGroups: TherapistsInGroups[]
   attendance: Attendance[]
+  patientPayments: PatientPayment[]
 }
 
 const KEY = 'phizio-db-v1'
@@ -29,6 +43,10 @@ export function load(): Db {
     // Handle migration: add attendance array if missing
     if (!parsed.attendance) {
       parsed.attendance = []
+    }
+    // Handle migration: add patientPayments array if missing
+    if (!parsed.patientPayments) {
+      parsed.patientPayments = []
     }
     // Handle migration: add enrolled field to existing patientsInGroups
     if (parsed.patientsInGroups) {
@@ -52,7 +70,8 @@ export function load(): Db {
     groups: [],
     patientsInGroups: [],
     therapistsInGroups: [],
-    attendance: []
+    attendance: [],
+    patientPayments: []
   }
   localStorage.setItem(KEY, JSON.stringify(seed))
   return seed
@@ -230,6 +249,42 @@ export const api = {
         .filter(a => a.groupId === groupId && a.date === date)
         .map(a => a.patientId)
     )
+  },
+  
+  // Payment operations
+  addPayment(db: Db, payment: Omit<PatientPayment, 'id' | 'createdAt' | 'updatedAt'>) {
+    const now = Date.now()
+    db.patientPayments.push({
+      id: uid(),
+      ...payment,
+      createdAt: now,
+      updatedAt: now
+    })
+    save(db)
+  },
+  
+  updatePayment(db: Db, id: ID, patch: Partial<Omit<PatientPayment, 'id'>>) {
+    const payment = db.patientPayments.find(p => p.id === id)
+    if (!payment) return
+    Object.assign(payment, patch, { updatedAt: Date.now() })
+    save(db)
+  },
+  
+  deletePayment(db: Db, id: ID) {
+    db.patientPayments = db.patientPayments.filter(p => p.id !== id)
+    save(db)
+  },
+  
+  getPaymentsByPatient(db: Db, patientId: ID): PatientPayment[] {
+    return db.patientPayments
+      .filter(p => p.patientId === patientId)
+      .sort((a, b) => b.createdAt - a.createdAt)
+  },
+  
+  getPaymentsByGroup(db: Db, groupId: ID): PatientPayment[] {
+    return db.patientPayments
+      .filter(p => p.groupId === groupId)
+      .sort((a, b) => b.createdAt - a.createdAt)
   }
 }
 

@@ -76,7 +76,7 @@
       const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null
       return {
         'שם קבוצה': g.name,
-        'מטפל/ת': therapist ? therapist.name : '',
+        'מנחה': therapist ? therapist.name : '',
         'מתי': g.when || 'open',
         'קיבולת': g.capacity || 15,
         'זמין': g.available || 15
@@ -97,43 +97,48 @@
       </button>
       <h2 class="text-lg font-semibold">קבוצות</h2>
     </div>
-    <form class="space-y-3" on:submit|preventDefault={add}>
-      <!-- First row - Group name only -->
-      <div class="flex items-center gap-2 justify-end">
+    <form on:submit|preventDefault={add}>
+      <div class="flex flex-row-reverse items-center gap-2">
+        <label for="group-name" class="text-sm text-gray-500 whitespace-nowrap">שם קבוצה</label>
         <input 
           id="group-name" 
-          class="flex-1 border rounded px-3 h-10 text-right" 
+          class="flex-1 border rounded px-3 h-10" 
+          style="text-align: right;"
           placeholder="שם קבוצה" 
           bind:value={name}
+          dir="rtl"
         />
-        <label for="group-name" class="text-sm text-gray-500 whitespace-nowrap">שם קבוצה</label>
-      </div>
-      
-      <!-- Second row - When, Available, Capacity -->
-      <div class="flex items-center gap-2 justify-end">
+        <label for="group-when" class="text-sm text-gray-500 whitespace-nowrap ml-2">מתי</label>
         <input 
           id="group-when" 
-          class="w-32 border rounded px-3 h-10 text-right" 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; width: 150px;"
           placeholder="מתי" 
           bind:value={when}
+          dir="rtl"
         />
-        <label for="group-when" class="text-sm text-gray-500 whitespace-nowrap">מתי</label>
+        <label for="group-available" class="text-sm text-gray-500 whitespace-nowrap ml-2">פנוי</label>
         <input 
           id="group-available" 
-          class="w-20 border rounded px-3 h-10 text-right" 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; width: 60px;"
           type="number" 
           bind:value={available}
+          dir="rtl"
+          max="99"
         />
-        <label for="group-available" class="text-sm text-gray-500 whitespace-nowrap">פנוי</label>
+        <label for="group-capacity" class="text-sm text-gray-500 whitespace-nowrap ml-2">קיבולת</label>
         <input 
           id="group-capacity" 
-          class="w-20 border rounded px-3 h-10 text-right" 
+          class="border rounded px-3 h-10" 
+          style="text-align: right; width: 60px;"
           type="number" 
           bind:value={capacity}
+          dir="rtl"
+          max="99"
         />
-        <label for="group-capacity" class="text-sm text-gray-500 whitespace-nowrap">קיבולת</label>
+        <button type="submit" class="big-green-button" style="min-width: 100px;">הוסף/י</button>
       </div>
-      <button type="submit" class="big-blue-button">הוסף/י קבוצה חדשה</button>
     </form>
   </div>
 
@@ -156,7 +161,7 @@
           class="text-gray-700 text-center font-semibold text-sm py-1 px-2 flex items-center justify-center"
           on:click={() => sortBy('therapist')}
         >
-          <span>מטפל/ת</span>
+          <span>מנחה</span>
           {#if sortField === 'therapist'}
             <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>

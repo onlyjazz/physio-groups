@@ -10,7 +10,7 @@
   let sortDirection: 'asc' | 'desc' = 'asc'
   
   function add() { if (!name.trim()) return; api.addTherapist(db, name.trim()); name=''; db = load() }
-  function del(id: string) { if (confirm('למחוק מטפל/ת?')) { api.removeTherapist(db,id); db=load() } }
+  function del(id: string) { if (confirm('למחוק מנחה?')) { api.removeTherapist(db,id); db=load() } }
   function startEdit(id: string, currentName: string) {
     editingId = id
     editingName = currentName
@@ -44,7 +44,7 @@
   // Export function
   function exportTherapists() {
     const exportData = sortedTherapists.map(t => ({
-      'שם מטפל/ת': t.name
+      'שם מנחה': t.name
     }))
     exportToCSV(exportData, 'therapists')
   }
@@ -59,11 +59,19 @@
       >
         ייצוא
       </button>
-      <h2 class="text-lg font-semibold">מטפל/ת</h2>
+      <h2 class="text-lg font-semibold">מנחה</h2>
     </div>
-    <form class="flex items-center gap-3" on:submit|preventDefault={add}>
-      <input class="input input-bordered grow rtl:text-right border rounded px-3 h-10" placeholder="שם מלא" bind:value={name}/>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700" style="border-radius: 0.375rem; height: 2.5rem;">הוסף/י</button>
+    <form on:submit|preventDefault={add}>
+      <div class="flex flex-row-reverse items-center gap-2">
+        <input 
+          class="flex-1 border rounded px-3 h-10" 
+          style="text-align: right;"
+          placeholder="שם מלא" 
+          bind:value={name} 
+          dir="rtl"
+        />
+        <button type="submit" class="big-green-button" style="min-width: 100px;">הוסף/י</button>
+      </div>
     </form>
   </div>
 
@@ -75,7 +83,7 @@
           class="py-1 px-2 inline-flex items-center"
           on:click={toggleSort}
         >
-          <span class="text-gray-700 font-semibold text-sm">שם מטפל/ת</span>
+          <span class="text-gray-700 font-semibold text-sm">שם מנחה</span>
           <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
           </svg>
@@ -91,7 +99,7 @@
         <div class="flex items-center justify-between py-2">
           <div class="flex-1 max-w-sm">
             {#if editingId === t.id}
-              <input class="border rounded px-2 py-1 w-full" bind:value={editingName} on:keydown={(e) => e.key === 'Enter' && saveEdit()}/>
+              <input class="border rounded px-2 py-1 w-full" bind:value={editingName} dir="rtl" on:keydown={(e) => e.key === 'Enter' && saveEdit()}/>
             {:else}
               <span class="text-gray-900">{t.name}</span>
             {/if}
@@ -126,7 +134,7 @@
         </div>
       {/each}
       {#if sortedTherapists.length === 0}
-        <div class="py-8 text-center text-gray-500">אין מטפלים</div>
+        <div class="py-8 text-center text-gray-500">אין מנחים</div>
       {/if}
     </div>
   </div>
