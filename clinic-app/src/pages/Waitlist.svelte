@@ -28,9 +28,10 @@
         const patient = db.patients.find(p => p.id === pig.patientId)
         
         if (group && patient) {
-          // Calculate available spots correctly based on enrolled patients
+          // Calculate available spots correctly based on enrolled and waitlisted patients
           const enrolledInGroup = db.patientsInGroups.filter(p => p.groupId === group.id && p.enrolled === 1).length
-          const availableSpots = group.capacity - enrolledInGroup
+          const waitlistedInGroup = db.patientsInGroups.filter(p => p.groupId === group.id && p.enrolled === 0).length
+          const availableSpots = group.capacity - enrolledInGroup - waitlistedInGroup
           
           waitlisted.push({
             groupId: group.id,
@@ -245,9 +246,12 @@
                 </td>
                 <td class="px-2 py-3 text-sm text-center">{item.patientName}</td>
                 <td class="px-2 py-3 text-sm text-center">
-                  <span class:text-red-600={item.available === 0} 
-                        class:text-green-600={item.available > 0}
-                        class:font-semibold={item.available === 0}>
+                  <span class="font-semibold"
+                        class:text-red-600={item.available <= 0} 
+                        class:text-orange-500={item.available > 0 && item.available <= 3}
+                        class:text-green-600={item.available > 3}
+                        dir="ltr"
+                        style="display: inline-block;">
                     {item.available}
                   </span>
                 </td>

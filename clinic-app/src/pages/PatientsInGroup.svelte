@@ -17,8 +17,8 @@
   $: enrolledPatients = patientsInGroup.filter(x => x.enrolled === 1)
   $: waitlistedPatients = patientsInGroup.filter(x => x.enrolled === 0)
   
-  // Calculate available spots correctly
-  $: availableSpots = group ? group.capacity - enrolledPatients.length : 0
+  // Calculate available spots correctly (negative when there's a waitlist)
+  $: availableSpots = group ? group.capacity - enrolledPatients.length - waitlistedPatients.length : 0
   
   // Get therapist for this group
   $: therapistInGroup = groupId ? db.therapistsInGroups.find(x => x.groupId === groupId) : null

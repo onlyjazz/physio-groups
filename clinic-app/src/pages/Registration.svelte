@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { load, api, type Db } from '../lib/db'
+  import { load, api, save, type Db } from '../lib/db'
   import { route } from '../router'
   import { goto } from '../router'
   
@@ -31,7 +31,7 @@
   $: selectedGroup = selectedGroupId ? db.groups.find(g => g.id === selectedGroupId) : null
   $: selectedGroupEnrolled = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 1).length : 0
   $: selectedGroupWaitlist = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 0).length : 0
-  $: selectedGroupAvailable = selectedGroup ? selectedGroup.capacity - selectedGroupEnrolled : 0
+  $: selectedGroupAvailable = selectedGroup ? selectedGroup.capacity - selectedGroupEnrolled - selectedGroupWaitlist : 0
   $: patientAlreadyInGroup = patientId && selectedGroupId ? db.patientsInGroups.find(x => x.groupId === selectedGroupId && x.patientId === patientId) : null
   
   // Generate month options
@@ -55,48 +55,75 @@
   const years = Array.from({length: 4}, (_, i) => currentYear - 2 + i)
   
   function savePayment() {
-    if (!patientId || !selectedGroupId || !amount || !receiptNumber) {
-      alert('נא למלא את כל השדות')
+    if (!patientId || !selectedGroupId) {
+      alert('נא לבחור מטופל וקבוצה')
       return
     }
     
-    // Convert date from YYYY-MM-DD to DD/MM/YYYY
-    const [year, month, day] = paymentDate.split('-')
-    const formattedPaymentDate = `${day}/${month}/${year}`
+    // Check if group has availability
+    const hasAvailability = selectedGroupAvailable > 0
+    
+    // If group has availability, require payment details
+    if (hasAvailability && (!amount || !receiptNumber)) {
+      alert('נא למלא את כל פרטי התשלום')
+      return
+    }
     
     // First check if patient is already in the group
-    const alreadyInGroup = db.patientsInGroups.some(
+    const existingEntry = db.patientsInGroups.find(
       pig => pig.patientId === patientId && pig.groupId === selectedGroupId
     )
     
-    // If not already in group, add them
-    if (!alreadyInGroup) {
-      api.addPatientToGroup(db, selectedGroupId, patientId, receiptNumber)
+    if (!existingEntry) {
+      // Add patient to group (will automatically go to waitlist if no availability)
+      api.addPatientToGroup(db, selectedGroupId, patientId, receiptNumber || '')
     } else {
-      // If already in group, update their receipt number
-      api.updatePatientReceipt(db, selectedGroupId, patientId, receiptNumber)
+      // Patient is already in group
+      if (!hasAvailability && existingEntry.enrolled === 1) {
+        // If no availability but patient is enrolled, move to waitlist
+        existingEntry.enrolled = 0
+        existingEntry.updatedAt = Date.now()
+        // Clear receipt since waitlist doesn't require payment
+        existingEntry.receipt = ''
+        save(db)
+      } else if (hasAvailability && receiptNumber) {
+        // If there's availability and we have a receipt, update it
+        api.updatePatientReceipt(db, selectedGroupId, patientId, receiptNumber)
+      }
     }
     
-    // Add the payment record
-    api.addPayment(db, {
-      patientId,
-      groupId: selectedGroupId,
-      fromMonth: `${fromMonth}/${fromYear}`,
-      toMonth: `${toMonth}/${toYear}`,
-      paymentDate: formattedPaymentDate,
-      amount,
-      paymentMethod,
-      receiptNumber
-    })
+    // Only add payment record if payment details were provided
+    if (amount && receiptNumber) {
+      // Convert date from YYYY-MM-DD to DD/MM/YYYY
+      const [year, month, day] = paymentDate.split('-')
+      const formattedPaymentDate = `${day}/${month}/${year}`
+      
+      api.addPayment(db, {
+        patientId,
+        groupId: selectedGroupId,
+        fromMonth: `${fromMonth}/${fromYear}`,
+        toMonth: `${toMonth}/${toYear}`,
+        paymentDate: formattedPaymentDate,
+        amount,
+        paymentMethod,
+        receiptNumber
+      })
+    }
     
-    alert('התשלום והרישום נרשמו בהצלחה')
+    // Reload database to reflect changes
+    db = load()
+    
+    // Show appropriate success message
+    if (hasAvailability) {
+      alert('התשלום והרישום נרשמו בהצלחה')
+    } else {
+      alert('המטופל נוסף לרשימת המתנה')
+    }
     
     // Reset form
     amount = 0
     receiptNumber = ''
     paymentDate = new Date().toISOString().split('T')[0]
-    
-    db = load()
   }
   
   // Determine where to navigate back to
@@ -216,24 +243,40 @@
       </div>
 
       <!-- Row 3: Payment details -->
-      <div class="flex flex-row-reverse items-center gap-3">
+      {#if selectedGroupAvailable <= 0 && selectedGroup}
+        <div class="bg-orange-50 border border-orange-200 rounded p-3">
+          <p class="text-sm text-orange-800 text-center">
+            הקבוצה מלאה - המטופל יצורף לרשימת המתנה (ללא תשלום)
+          </p>
+        </div>
+      {:else if selectedGroup}
+        <div class="bg-green-50 border border-green-200 rounded p-3">
+          <p class="text-sm text-green-800 text-center">
+            יש מקום פנוי - נא למלא את פרטי התשלום
+          </p>
+        </div>
+      {/if}
+      
+      <div class="flex flex-row-reverse items-center gap-3 {selectedGroupAvailable <= 0 ? 'opacity-50' : ''}" >
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">סכום</label>
         <input 
           type="number" 
-          class="border rounded px-3 h-10" 
+          class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 100px;"
           bind:value={amount}
           dir="rtl"
+          disabled={selectedGroupAvailable <= 0}
         />
         
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">אופן תשלום</label>
         <select 
-          class="border rounded px-3 h-10" 
+          class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 100px;"
           bind:value={paymentMethod}
           dir="rtl"
+          disabled={selectedGroupAvailable <= 0}
         >
           <option value="א">א - אשראי</option>
           <option value="ת">ת - מזומן</option>
@@ -244,17 +287,19 @@
         <label class="text-sm text-gray-600 whitespace-nowrap">מספר קבלה</label>
         <input 
           type="text" 
-          class="border rounded px-3 h-10" 
+          class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 150px;"
           bind:value={receiptNumber}
           dir="rtl"
+          disabled={selectedGroupAvailable <= 0}
         />
         
         <label class="text-sm text-gray-600 whitespace-nowrap">תאריך תשלום</label>
         <input 
           type="date" 
-          class="border rounded px-3 h-10"
+          class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}"
           bind:value={paymentDate}
+          disabled={selectedGroupAvailable <= 0}
         />
       </div>
 
@@ -264,7 +309,7 @@
           class="big-green-button"
           on:click={savePayment}
         >
-          {patientAlreadyInGroup ? 'שמור תשלום' : selectedGroupAvailable <= 0 ? 'שמור תשלום ורישום לרשימת המתנה' : 'שמור תשלום ורישום לקבוצה'}
+        {selectedGroupAvailable <= 0 ? 'שמור להמתנה' : (patientAlreadyInGroup && patientAlreadyInGroup.enrolled === 1 ? 'שמור תשלום' : 'שמור תשלום להרשמה')}
         </button>
       </div>
     </div>

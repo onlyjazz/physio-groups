@@ -165,7 +165,11 @@ export const api = {
     if (!group) return
     
     const enrolledCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
-    const hasAvailability = enrolledCount < group.capacity
+    const waitlistCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 0).length
+    
+    // Only enroll if under capacity AND no waitlist exists
+    // If there's a waitlist, new patients must join it
+    const hasAvailability = enrolledCount < group.capacity && waitlistCount === 0
     
     // Set enrolled to 1 if there's availability, 0 for waitlist
     const enrolled = hasAvailability ? 1 : 0
