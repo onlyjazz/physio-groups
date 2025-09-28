@@ -118,6 +118,7 @@
     <div class="bg-white rounded-lg shadow p-4 space-y-4">
       <!-- Row 1: Group selection and Period -->
       <div class="flex flex-row-reverse items-center gap-3">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">קבוצה</label>
         <select 
           class="flex-1 border rounded px-3 h-10" 
@@ -131,10 +132,12 @@
           {/each}
         </select>
         
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap ml-3">תקופה</label>
         <div class="flex items-center gap-2">
-          <label class="text-xs text-gray-500">מ:</label>
-          <select class="border rounded px-2 h-10" bind:value={fromMonth} dir="rtl">
+            <!-- svelte-ignore a11y_label_has_associated_control -->
+            <label class="text-xs text-gray-500">מ:</label>
+            <select class="border rounded px-2 h-10" bind:value={fromMonth} dir="rtl">
             {#each months as month}
               <option value={month.value}>{month.label}</option>
             {/each}
@@ -145,7 +148,8 @@
             {/each}
           </select>
           
-          <label class="text-xs text-gray-500 ml-2">עד:</label>
+            <!-- svelte-ignore a11y_label_has_associated_control -->
+            <label class="text-xs text-gray-500 ml-2">עד:</label>
           <select class="border rounded px-2 h-10" bind:value={toMonth} dir="rtl">
             {#each months as month}
               <option value={month.value}>{month.label}</option>
@@ -195,6 +199,7 @@
 
       <!-- Row 3: Payment details -->
       <div class="flex flex-row-reverse items-center gap-3">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">סכום</label>
         <input 
           type="number" 
@@ -204,6 +209,7 @@
           dir="rtl"
         />
         
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">אופן תשלום</label>
         <select 
           class="border rounded px-3 h-10" 
@@ -211,12 +217,12 @@
           bind:value={paymentMethod}
           dir="rtl"
         >
-          <option value="ק">ק - המחאה</option>
           <option value="א">א - אשראי</option>
           <option value="ת">ת - מזומן</option>
-          <option value="מ">מ - העברה</option>
+          <option value="ה">ה - הרשאה</option>
         </select>
         
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">מספר קבלה</label>
         <input 
           type="text" 
