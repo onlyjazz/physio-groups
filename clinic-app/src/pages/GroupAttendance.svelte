@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { load, api, type Db } from '../lib/db'
+  import { load, api, type Db, type Patient } from '../lib/db'
   import { route } from '../router'
   import { goto } from '../router'
   import { exportToCSV } from '../lib/csvExport'
@@ -29,6 +29,32 @@
   // Get attendance for selected date
   $: attendanceSet = groupId && selectedDate ? 
     api.getAttendanceForGroupAndDate(db, groupId, selectedDate) : new Set()
+  
+  // Makeup class search
+  let makeupSearchQuery = ''
+  
+  // Get filtered patients for makeup search
+  $: makeupSearchResults = (() => {
+    if (!makeupSearchQuery.trim()) return []
+    
+    const query = makeupSearchQuery.trim().toLowerCase()
+    const patientsInGroupSet = new Set(patientsInGroup.map(pg => pg.patientId))
+    
+    // Search all patients, excluding those already in the group
+    return db.patients.filter(p => {
+      // Skip patients already in the group
+      if (patientsInGroupSet.has(p.id)) return false
+      
+      const searchableText = [
+        p.firstName || '',
+        p.lastName || '',
+        p.nationalId || '',
+        p.phone || ''
+      ].join(' ').toLowerCase()
+      
+      return searchableText.includes(query)
+    })
+  })()
   
   function toggleAttendance(patientId: string) {
     if (!groupId || !selectedDate || !selectedTherapistId) {
@@ -62,23 +88,51 @@
   
   // Export function
   function exportAttendance() {
-    if (!group || !patientsInGroup.length) return
+    if (!group) return
     
-    const exportData = patientsInGroup.map(pg => {
-      const patient = db.patients.find(p => p.id === pg.patientId)
+    // Get all attended patients (both regular and makeup)
+    const allAttendedPatientIds = Array.from(attendanceSet)
+    
+    const exportData = allAttendedPatientIds.map(patientId => {
+      const patient = db.patients.find(p => p.id === patientId)
+      const isRegular = patientsInGroup.some(pg => pg.patientId === patientId)
+      
       return patient ? {
         'שם פרטי': patient.firstName,
         'שם משפחה': patient.lastName,
         'ת.ז.': patient.nationalId,
         'טלפון': patient.phone,
-        'נוכח': attendanceSet.has(patient.id) ? 'כן' : 'לא',
+        'סוג': isRegular ? 'רגיל' : 'השלמה',
+        'נוכח': 'כן',
         'תאריך': selectedDate,
         'קבוצה': group.name
       } : null
     }).filter(Boolean)
     
-    exportToCSV(exportData, `attendance_${group.name}_${selectedDate}`)
+    // Add non-attended regular patients
+    const nonAttendedRegular = patientsInGroup
+      .filter(pg => !attendanceSet.has(pg.patientId))
+      .map(pg => {
+        const patient = db.patients.find(p => p.id === pg.patientId)
+        return patient ? {
+          'שם פרטי': patient.firstName,
+          'שם משפחה': patient.lastName,
+          'ת.ז.': patient.nationalId,
+          'טלפון': patient.phone,
+          'סוג': 'רגיל',
+          'נוכח': 'לא',
+          'תאריך': selectedDate,
+          'קבוצה': group.name
+        } : null
+      }).filter(Boolean)
+    
+    exportToCSV([...exportData, ...nonAttendedRegular], `attendance_${group.name}_${selectedDate}`)
   }
+  
+  // Count attendance including makeup students
+  $: totalAttendance = attendanceSet.size
+  $: regularAttendance = patientsInGroup.filter(pg => attendanceSet.has(pg.patientId)).length
+  $: makeupAttendance = totalAttendance - regularAttendance
 </script>
 
 <section class="space-y-6">
@@ -176,10 +230,104 @@
         <div class="mt-6 pt-4 border-t">
           <div class="text-sm text-gray-600">
             <span class="font-semibold">סה"כ נוכחים:</span>
-            <span class="mr-2">{attendanceSet.size} מתוך {patientsInGroup.length}</span>
+            <span class="mr-2">{regularAttendance} מתוך {patientsInGroup.length}</span>
           </div>
         </div>
       {/if}
+    </div>
+    
+    <!-- Makeup Classes Section -->
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="mb-4">
+        <h3 class="text-base font-semibold text-right">השלמות</h3>
+      </div>
+      
+      <!-- Search box for makeup students -->
+      <div class="mb-3">
+        <input
+          type="text"
+          class="w-full border rounded-full px-4 py-2 text-sm"
+          style="text-align: right;"
+          placeholder="חיפוש מטופל להשלמה..."
+          bind:value={makeupSearchQuery}
+          dir="rtl"
+        />
+      </div>
+      
+      <!-- Search results -->
+      {#if makeupSearchQuery.trim() && makeupSearchResults.length > 0}
+        <div class="space-y-2 mb-4">
+          {#each makeupSearchResults as patient (patient.id)}
+            <div class="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded border border-gray-100">
+              <div class="flex-1">
+                <span class="font-medium">
+                  {patient.firstName} {patient.lastName}
+                </span>
+                <span class="text-sm text-gray-500 mr-3">
+                  ת.ז. {patient.nationalId}
+                </span>
+              </div>
+              <label class="flex items-center cursor-pointer gap-2">
+                <input 
+                  type="checkbox" 
+                  class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  checked={attendanceSet.has(patient.id)}
+                  on:change={() => toggleAttendance(patient.id)}
+                />
+                <span class="text-sm text-gray-600">נוכח/ת</span>
+              </label>
+            </div>
+          {/each}
+        </div>
+      {:else if makeupSearchQuery.trim() && makeupSearchResults.length === 0}
+        <p class="text-gray-500 text-center py-4 text-sm">לא נמצאו מטופלים התואמים לחיפוש</p>
+      {/if}
+      
+      <!-- Show makeup students already marked as present -->
+      {#if makeupAttendance > 0}
+        <div class="border-t pt-4 mt-4">
+          <h4 class="text-sm font-semibold text-gray-700 mb-2 text-right">מטופלים בהשלמה</h4>
+          <div class="space-y-2">
+            {#each Array.from(attendanceSet) as patientId}
+              {#if !patientsInGroup.some(pg => pg.patientId === patientId)}
+                {@const patient = db.patients.find(p => p.id === patientId)}
+                {#if patient}
+                  <div class="flex items-center justify-between py-2 px-3 bg-blue-50 rounded">
+                    <div class="flex-1">
+                      <span class="font-medium text-sm">
+                        {patient.firstName} {patient.lastName}
+                      </span>
+                      <span class="text-xs text-gray-500 mr-3">
+                        ת.ז. {patient.nationalId}
+                      </span>
+                    </div>
+                    <button 
+                      class="text-red-600 hover:text-red-700 text-xs font-medium"
+                      on:click={() => toggleAttendance(patient.id)}
+                    >
+                      הסר
+                    </button>
+                  </div>
+                {/if}
+              {/if}
+            {/each}
+          </div>
+        </div>
+      {/if}
+      
+      <!-- Summary -->
+      <div class="mt-4 pt-4 border-t">
+        <div class="text-sm text-gray-600 space-y-1">
+          <div>
+            <span class="font-semibold">סה"כ השלמות:</span>
+            <span class="mr-2">{makeupAttendance}</span>
+          </div>
+          <div class="text-xs text-gray-500">
+            <span class="font-semibold">סה"כ כללי:</span>
+            <span class="mr-2">{totalAttendance} נוכחים</span>
+          </div>
+        </div>
+      </div>
     </div>
   {:else}
     <div class="bg-white rounded-lg shadow p-8">

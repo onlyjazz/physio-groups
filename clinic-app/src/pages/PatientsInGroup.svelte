@@ -110,7 +110,7 @@
         </div>
         
         <div class="text-right">
-          <h3 class="text-sm font-medium text-gray-600 mb-2">קיבולת</h3>
+          <h3 class="text-sm font-medium text-gray-600 mb-2">תפוסה</h3>
           <div class="space-y-1">
             <div class="text-2xl font-bold">{enrolledPatients.length} / {group.capacity}</div>
             <div class="text-sm {availableSpots <= 0 ? 'text-red-600 font-medium' : availableSpots <= 3 ? 'text-orange-500' : 'text-gray-600'}">מקומות פנויים: {availableSpots}</div>
@@ -131,26 +131,40 @@
       {#if enrolledPatients.length === 0}
         <p class="text-center text-gray-500 py-4">אין מטופלים רשומים</p>
       {:else}
+        <!-- Header row -->
+        <div class="flex items-center py-2 border-b mb-2">
+          <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבלה</div>
+          </div>
+          <div class="w-10">
+            <!-- Empty space for action buttons -->
+          </div>
+        </div>
+        
         <div class="space-y-2">
           {#each enrolledPatients as pig}
             {@const patient = db.patients.find(p => p.id === pig.patientId)}
             {#if patient}
-              <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded">
-                <button 
-                  class="text-red-600 hover:text-red-700"
-                  on:click={() => removePatient(patient.id)}
-                  title="הסר"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-                
-                <div class="flex-1 text-right flex items-center gap-4">
-                  <span class="text-sm text-gray-500">קבלה: {pig.receipt || '-'}</span>
-                  <span class="text-sm text-gray-600">טל: {patient.phone}</span>
-                  <span class="text-sm text-gray-600">ת.ז: {patient.nationalId}</span>
-                  <span class="font-medium">{patient.firstName} {patient.lastName}</span>
+              <div class="flex items-center py-2">
+                <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
+                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
+                  <div class="text-sm text-gray-500 text-right px-2">{pig.receipt || '-'}</div>
+                </div>
+                <div class="w-10 flex justify-center">
+                  <button 
+                    class="text-red-600 hover:text-red-700"
+                    on:click={() => removePatient(patient.id)}
+                    title="הסר"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             {/if}
@@ -164,26 +178,40 @@
       <div class="bg-white rounded-lg shadow p-4">
         <h3 class="text-base font-semibold mb-4 text-orange-600">ממתינים ({waitlistedPatients.length})</h3>
         
+        <!-- Header row -->
+        <div class="flex items-center py-2 border-b mb-2">
+          <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">סטטוס</div>
+          </div>
+          <div class="w-10">
+            <!-- Empty space for action buttons -->
+          </div>
+        </div>
+        
         <div class="space-y-2">
           {#each waitlistedPatients as pig}
             {@const patient = db.patients.find(p => p.id === pig.patientId)}
             {#if patient}
-              <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded">
-                <button 
-                  class="text-red-600 hover:text-red-700"
-                  on:click={() => removePatient(patient.id)}
-                  title="הסר"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-                
-                <div class="flex-1 text-right flex items-center gap-4">
-                  <span class="text-sm text-orange-600 font-medium">ממתין</span>
-                  <span class="text-sm text-gray-600">טל: {patient.phone}</span>
-                  <span class="text-sm text-gray-600">ת.ז: {patient.nationalId}</span>
-                  <span class="font-medium">{patient.firstName} {patient.lastName}</span>
+              <div class="flex items-center py-2">
+                <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
+                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
+                  <div class="text-sm text-orange-600 font-medium text-right px-2">ממתין</div>
+                </div>
+                <div class="w-10 flex justify-center">
+                  <button 
+                    class="text-red-600 hover:text-red-700"
+                    on:click={() => removePatient(patient.id)}
+                    title="הסר"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             {/if}
