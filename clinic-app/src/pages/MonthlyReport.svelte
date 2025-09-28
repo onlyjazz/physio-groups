@@ -47,11 +47,12 @@
     reportData = []
     
     // Filter attendance records for the selected month/year
+    // Exclude makeup attendance records as requested by the clinic
     const monthStart = `${selectedYear}-${selectedMonth}-01`
     const monthEnd = `${selectedYear}-${selectedMonth}-31`
     
     const monthAttendance = db.attendance.filter(a => {
-      return a.date >= monthStart && a.date <= monthEnd
+      return a.date >= monthStart && a.date <= monthEnd && !a.isMakeup
     })
     
     // Group attendance by group ID

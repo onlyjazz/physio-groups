@@ -56,7 +56,7 @@
     })
   })()
   
-  function toggleAttendance(patientId: string) {
+  function toggleAttendance(patientId: string, isMakeup: boolean = false) {
     if (!groupId || !selectedDate || !selectedTherapistId) {
       if (!selectedTherapistId) {
         alert('נא לבחור מנחה')
@@ -67,7 +67,7 @@
     if (attendanceSet.has(patientId)) {
       api.unmarkAttendance(db, groupId, patientId, selectedDate)
     } else {
-      api.markAttendance(db, groupId, patientId, selectedTherapistId, selectedDate)
+      api.markAttendance(db, groupId, patientId, selectedTherapistId, selectedDate, isMakeup)
     }
     
     db = load()
@@ -218,7 +218,7 @@
                     type="checkbox" 
                     class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                     checked={attendanceSet.has(patient.id)}
-                    on:change={() => toggleAttendance(patient.id)}
+                    on:change={() => toggleAttendance(patient.id, false)}
                   />
                   <span class="text-sm text-gray-600">נוכח/ת</span>
                 </label>
@@ -272,7 +272,7 @@
                   type="checkbox" 
                   class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                   checked={attendanceSet.has(patient.id)}
-                  on:change={() => toggleAttendance(patient.id)}
+                  on:change={() => toggleAttendance(patient.id, true)}
                 />
                 <span class="text-sm text-gray-600">נוכח/ת</span>
               </label>
@@ -303,7 +303,7 @@
                     </div>
                     <button 
                       class="text-red-600 hover:text-red-700 text-xs font-medium"
-                      on:click={() => toggleAttendance(patient.id)}
+                      on:click={() => toggleAttendance(patient.id, true)}
                     >
                       הסר
                     </button>

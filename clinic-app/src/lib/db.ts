@@ -6,7 +6,7 @@ export interface Patient { id: ID; nationalId: string; phone: string; firstName:
 export interface Group { id: ID; name: string; capacity: number; available: number; when: string; createdAt: number; updatedAt: number }
 export interface PatientsInGroups { id: ID; patientId: ID; groupId: ID; receipt?: string; enrolled: number; createdAt: number; updatedAt: number; statusId: ID }
 export interface TherapistsInGroups { id: ID; therapistId: ID; groupId: ID; createdAt: number; updatedAt: number; statusId: ID }
-export interface Attendance { id: ID; patientId: ID; groupId: ID; therapistId: ID; date: string; createdAt: number }
+export interface Attendance { id: ID; patientId: ID; groupId: ID; therapistId: ID; date: string; isMakeup: boolean; createdAt: number }
 export interface PatientPayment { 
   id: ID; 
   patientId: ID; 
@@ -55,6 +55,15 @@ export function load(): Db {
           return { ...pig, enrolled: 1 } // Assume existing patients are enrolled
         }
         return pig
+      })
+    }
+    // Handle migration: add isMakeup field to existing attendance records
+    if (parsed.attendance) {
+      parsed.attendance = parsed.attendance.map((att: any) => {
+        if (att.isMakeup === undefined) {
+          return { ...att, isMakeup: false } // Assume existing attendance is not makeup
+        }
+        return att
       })
     }
     return parsed
@@ -213,14 +222,15 @@ export const api = {
   },
 
   // Attendance operations
-  markAttendance(db: Db, groupId: ID, patientId: ID, therapistId: ID, date: string) {
+  markAttendance(db: Db, groupId: ID, patientId: ID, therapistId: ID, date: string, isMakeup: boolean = false) {
     // Check if attendance already exists for this patient, group, and date
     const existing = db.attendance.find(a => 
       a.groupId === groupId && a.patientId === patientId && a.date === date
     )
     if (existing) {
-      // Update the therapist if attendance already exists
+      // Update the therapist and makeup flag if attendance already exists
       existing.therapistId = therapistId
+      existing.isMakeup = isMakeup
       save(db)
       return
     }
@@ -231,6 +241,7 @@ export const api = {
       groupId,
       therapistId,
       date,
+      isMakeup,
       createdAt: Date.now()
     })
     save(db)
