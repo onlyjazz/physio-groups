@@ -5,12 +5,19 @@
   
   let db: Db = load()
   
-  // Get patient ID from route
+  // Get patient ID and group ID from route
   $: patientId = $route.segments[0] || null
+  $: groupIdFromRoute = $route.segments[1] || null
   $: patient = patientId ? db.patients.find(p => p.id === patientId) : null
   
-  // Form state
+  // Form state - initialize with group from route if available
   let selectedGroupId = ''
+  
+  // Set selectedGroupId from route if available
+  $: if (groupIdFromRoute && !selectedGroupId) {
+    selectedGroupId = groupIdFromRoute
+  }
+  
   let fromMonth = String(new Date().getMonth() + 1).padStart(2, '0')
   let fromYear = new Date().getFullYear()
   let toMonth = String(new Date().getMonth() + 1).padStart(2, '0')
@@ -92,9 +99,19 @@
     db = load()
   }
   
-  function backToPatients() {
-    goto('/patients')
+  // Determine where to navigate back to
+  function goBack() {
+    if (groupIdFromRoute) {
+      // If we have a groupId from route, we came from waitlist
+      goto('/waitlist')
+    } else {
+      // Otherwise, we came from patients
+      goto('/patients')
+    }
   }
+  
+  // Get the appropriate back button text
+  $: backButtonText = groupIdFromRoute ? 'חזרה לממתינים' : 'חזרה למטופלים'
 </script>
 
 <section class="space-y-6">
@@ -102,9 +119,9 @@
     <div class="flex justify-between items-center mb-4">
       <button 
         class="text-blue-600 hover:underline text-sm" 
-        on:click={backToPatients}
+        on:click={goBack}
       >
-        חזרה למטופלים
+        {backButtonText}
       </button>
       <h2 class="text-lg font-semibold">רישום תשלום</h2>
     </div>
@@ -121,10 +138,11 @@
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">קבוצה</label>
         <select 
-          class="flex-1 border rounded px-3 h-10" 
+          class="flex-1 border rounded px-3 h-10 {groupIdFromRoute ? 'bg-gray-100' : ''}" 
           style="text-align: right;" 
           dir="rtl"
           bind:value={selectedGroupId}
+          disabled={!!groupIdFromRoute}
         >
           <option value="" disabled>בחר/י קבוצה</option>
           {#each db.groups as group}

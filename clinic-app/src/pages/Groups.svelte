@@ -19,7 +19,6 @@
   let editing = false
   let editName = ''
   let editCapacity = 15
-  let editAvailable = 15
   let editWhen = 'open'
   let editTherapistId = ''
   
@@ -28,7 +27,6 @@
     editing = true
     editName = group.name
     editCapacity = group.capacity || 15
-    editAvailable = group.available || 15
     editWhen = group.when || 'open'
     editTherapistId = therapistInGroup?.therapistId || ''
   }
@@ -37,17 +35,20 @@
     editing = false
     editName = ''
     editCapacity = 15
-    editAvailable = 15
     editWhen = 'open'
     editTherapistId = ''
   }
   
   function saveEdit() {
     if (!editName.trim() || !groupId) return
+    // Calculate the correct available spots based on enrolled patients
+    const enrolledInGroup = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
+    const correctAvailable = editCapacity - enrolledInGroup
+    
     api.updateGroup(db, groupId, { 
       name: editName.trim(),
       capacity: editCapacity,
-      available: editAvailable,
+      available: correctAvailable,
       when: editWhen
     })
     // Update therapist if changed
@@ -150,13 +151,9 @@
         
         <label class="text-sm text-gray-600 font-medium whitespace-nowrap">פנוי</label>
         {#if editing}
-          <input 
-            class="w-20 border rounded px-3 h-10" 
-            style="text-align: right;" 
-            type="number" 
-            bind:value={editAvailable} 
-            dir="rtl"
-          />
+          <div class="w-20 px-3 py-2 text-center bg-gray-100 rounded">
+            <span class="text-gray-600">{editCapacity - enrolledCount}</span>
+          </div>
         {:else}
           <div class="w-20 px-3 py-2 text-center">
             <span>{availableSpots}</span>

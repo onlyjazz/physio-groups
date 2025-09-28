@@ -66,6 +66,13 @@ export function load(): Db {
         return att
       })
     }
+    // Recalculate available spots for all groups to ensure consistency
+    if (parsed.groups && parsed.patientsInGroups) {
+      parsed.groups.forEach((group: any) => {
+        const enrolledCount = parsed.patientsInGroups.filter((x: any) => x.groupId === group.id && x.enrolled === 1).length
+        group.available = group.capacity - enrolledCount
+      })
+    }
     return parsed
   }
   // seed
@@ -296,6 +303,16 @@ export const api = {
     return db.patientPayments
       .filter(p => p.groupId === groupId)
       .sort((a, b) => b.createdAt - a.createdAt)
+  },
+  
+  // Recalculate available spots for all groups
+  recalculateAvailableSpots(db: Db) {
+    db.groups.forEach(group => {
+      const enrolledCount = db.patientsInGroups.filter(x => x.groupId === group.id && x.enrolled === 1).length
+      group.available = group.capacity - enrolledCount
+      group.updatedAt = Date.now()
+    })
+    save(db)
   }
 }
 
