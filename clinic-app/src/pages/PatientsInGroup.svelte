@@ -13,12 +13,22 @@
   // Get patients in this group
   $: patientsInGroup = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId) : []
   
-  // Separate enrolled and waitlisted
-  $: enrolledPatients = patientsInGroup.filter(x => x.enrolled === 1)
+  // Get enrolled patients with active subscriptions only
+  $: activeEnrolledPatients = groupId ? api.getPatientsWithActiveSubscriptions(db, groupId) : []
+  
+  // Get all enrolled patients (for showing inactive ones separately if needed)
+  $: allEnrolledPatients = patientsInGroup.filter(x => x.enrolled === 1)
+  
+  // Get inactive enrolled patients
+  $: inactiveEnrolledPatients = allEnrolledPatients.filter(pig => 
+    !api.hasActiveSubscription(db, pig.patientId, groupId || '')
+  )
+  
+  // Waitlisted patients remain the same
   $: waitlistedPatients = patientsInGroup.filter(x => x.enrolled === 0)
   
-  // Calculate available spots correctly (negative when there's a waitlist)
-  $: availableSpots = group ? group.capacity - enrolledPatients.length - waitlistedPatients.length : 0
+  // Calculate available spots based on active subscriptions
+  $: availableSpots = groupId ? api.getAvailableWithActiveSubscriptions(db, groupId) : 0
   
   // Get therapist for this group
   $: therapistInGroup = groupId ? db.therapistsInGroups.find(x => x.groupId === groupId) : null
@@ -35,13 +45,15 @@
   function exportPatients() {
     if (!group) return
     
-    const exportData = enrolledPatients.map(pig => {
+    const exportData = activeEnrolledPatients.map(pig => {
       const patient = db.patients.find(p => p.id === pig.patientId)
+      const paymentPeriod = patient && groupId ? getPaymentPeriod(patient.id, groupId) : null
       return patient ? {
         'שם פרטי': patient.firstName,
         'שם משפחה': patient.lastName,
         'ת.ז.': patient.nationalId,
         'טלפון': patient.phone,
+        'תקופת תשלום': paymentPeriod || '-',
         'מספר קבלה': pig.receipt || '',
         'סטטוס': 'רשום',
         'קבוצה': group.name
@@ -69,6 +81,31 @@
   
   function backToGroups() {
     goto('/groupsList')
+  }
+  
+  function goToPatientHistory(patientId: string) {
+    goto(`history/${patientId}`)
+  }
+  
+  // Get the latest payment period for a patient in a group
+  function getPaymentPeriod(patientId: string, groupId: string): string | null {
+    const payments = db.patientPayments
+      .filter(p => p.patientId === patientId && p.groupId === groupId)
+      .sort((a, b) => b.createdAt - a.createdAt)
+    
+    if (payments.length === 0) return null
+    
+    const latest = payments[0]
+    // Format: MM/YY-MM/YY for compact display
+    const fromParts = latest.fromMonth.split('/')
+    const toParts = latest.toMonth.split('/')
+    
+    const fromMonth = fromParts[0]
+    const fromYear = fromParts[1]?.substring(2) // Last 2 digits of year
+    const toMonth = toParts[0]
+    const toYear = toParts[1]?.substring(2) // Last 2 digits of year
+    
+    return `${fromMonth}/${fromYear}-${toMonth}/${toYear}`
   }
 </script>
 
@@ -112,8 +149,8 @@
         <div class="text-right">
           <h3 class="text-sm font-medium text-gray-600 mb-2">תפוסה</h3>
           <div class="space-y-1">
-            <div class="text-2xl font-bold">{enrolledPatients.length} / {group.capacity}</div>
-            <div class="text-sm {availableSpots <= 0 ? 'text-red-600 font-medium' : availableSpots <= 3 ? 'text-orange-500' : 'text-gray-600'}">מקומות פנויים: {availableSpots}</div>
+            <div class="text-2xl font-bold">{activeEnrolledPatients.length} / {group.capacity}</div>
+            <div class="text-sm {availableSpots <= 0 ? 'text-red-600 font-medium' : availableSpots <= 3 ? 'text-orange-500' : 'text-gray-600'}">מקומות פנויים: <span dir="ltr" style="display: inline-block;">{availableSpots}</span></div>
           </div>
         </div>
         
@@ -124,41 +161,37 @@
       </div>
     </div>
 
-    <!-- Enrolled patients -->
+    <!-- Active enrolled patients -->
     <div class="bg-white rounded-lg shadow p-4">
-      <h3 class="text-base font-semibold mb-4">רשומים ({enrolledPatients.length})</h3>
+      <h3 class="text-base font-semibold mb-4">רשומים פעילים ({activeEnrolledPatients.length})</h3>
       
-      {#if enrolledPatients.length === 0}
-        <p class="text-center text-gray-500 py-4">אין מטופלים רשומים</p>
+      {#if activeEnrolledPatients.length === 0}
+        <p class="text-center text-gray-500 py-4">אין מטופלים רשומים פעילים</p>
       {:else}
-        <!-- Header row -->
+        <!-- Header row (from left to right: delete, name, ID, phone, period, receipt) -->
         <div class="flex items-center py-2 border-b mb-2">
-          <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבלה</div>
-          </div>
           <div class="w-10">
             <!-- Empty space for action buttons -->
+          </div>
+          <div class="flex-1 grid" style="grid-template-columns: 100px 130px 140px 120px 3fr;">
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבלה</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">תקופה</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
           </div>
         </div>
         
         <div class="space-y-2">
-          {#each enrolledPatients as pig}
+          {#each activeEnrolledPatients as pig}
             {@const patient = db.patients.find(p => p.id === pig.patientId)}
+            {@const paymentPeriod = patient && groupId ? getPaymentPeriod(patient.id, groupId) : null}
             {#if patient}
-              <div class="flex items-center py-2">
-                <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
-                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
-                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
-                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
-                  <div class="text-sm text-gray-500 text-right px-2">{pig.receipt || '-'}</div>
-                </div>
+              <div class="flex items-center py-2 hover:bg-gray-50 rounded transition-colors">
                 <div class="w-10 flex justify-center">
                   <button 
-                    class="text-red-600 hover:text-red-700"
-                    on:click={() => removePatient(patient.id)}
+                    class="text-red-600 hover:text-red-700 p-1"
+                    on:click|stopPropagation={() => removePatient(patient.id)}
                     title="הסר"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,6 +199,18 @@
                     </svg>
                   </button>
                 </div>
+                <button
+                  class="flex-1 grid cursor-pointer text-left"
+                  style="grid-template-columns: 100px 130px 140px 120px 3fr;"
+                  on:click={() => goToPatientHistory(patient.id)}
+                  title="לחץ לצפייה בהיסטוריית תשלומים"
+                >
+                  <div class="text-sm text-gray-500 text-right px-2">{pig.receipt || '-'}</div>
+                  <div class="text-sm text-green-700 font-medium text-right px-2">{paymentPeriod || '-'}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
+                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
+                </button>
               </div>
             {/if}
           {/each}
@@ -180,14 +225,14 @@
         
         <!-- Header row -->
         <div class="flex items-center py-2 border-b mb-2">
-          <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">סטטוס</div>
-          </div>
           <div class="w-10">
             <!-- Empty space for action buttons -->
+          </div>
+          <div class="flex-1 grid" style="grid-template-columns: 120px 140px 120px 3fr;">
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">סטטוס</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
           </div>
         </div>
         
@@ -195,17 +240,11 @@
           {#each waitlistedPatients as pig}
             {@const patient = db.patients.find(p => p.id === pig.patientId)}
             {#if patient}
-              <div class="flex items-center py-2">
-                <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 120px;">
-                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
-                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
-                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
-                  <div class="text-sm text-orange-600 font-medium text-right px-2">ממתין</div>
-                </div>
+              <div class="flex items-center py-2 hover:bg-gray-50 rounded transition-colors">
                 <div class="w-10 flex justify-center">
                   <button 
-                    class="text-red-600 hover:text-red-700"
-                    on:click={() => removePatient(patient.id)}
+                    class="text-red-600 hover:text-red-700 p-1"
+                    on:click|stopPropagation={() => removePatient(patient.id)}
                     title="הסר"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,6 +252,17 @@
                     </svg>
                   </button>
                 </div>
+                <button
+                  class="flex-1 grid cursor-pointer text-left"
+                  style="grid-template-columns: 120px 140px 120px 3fr;"
+                  on:click={() => goToPatientHistory(patient.id)}
+                  title="לחץ לצפייה בהיסטוריית תשלומים"
+                >
+                  <div class="text-sm text-orange-600 font-medium text-right px-2">ממתין</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.phone}</div>
+                  <div class="text-sm text-gray-600 text-right px-2">{patient.nationalId}</div>
+                  <div class="font-medium text-right px-2">{patient.firstName} {patient.lastName}</div>
+                </button>
               </div>
             {/if}
           {/each}

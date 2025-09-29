@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { load, api, type Db } from '../lib/db'
+  import { load, api, type Db, type Group } from '../lib/db'
   import { goto } from '../router'
   import { exportToCSV } from '../lib/csvExport'
   
@@ -9,6 +9,12 @@
   let available = 15
   let when = 'open'
   let searchQuery = ''
+  
+  // Inline editing state
+  let editingId = ''
+  let editingName = ''
+  let editingWhen = ''
+  let editingTherapistId = ''
   
   // Sorting state
   let sortField: 'name' | 'therapist' | 'when' | 'available' | null = null
@@ -25,6 +31,67 @@
     db = load()
   }
   
+  function startEdit(group: Group) {
+    editingId = group.id
+    editingName = group.name || ''
+    editingWhen = group.when || 'open'
+    
+    // Get current therapist
+    const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === group.id)
+    editingTherapistId = therapistInGroup?.therapistId || ''
+  }
+  
+  function cancelEdit() {
+    editingId = ''
+    editingName = ''
+    editingWhen = ''
+    editingTherapistId = ''
+  }
+  
+  function saveEdit() {
+    if (!editingName.trim()) return
+    
+    // Get current group to preserve capacity and available
+    const currentGroup = db.groups.find(g => g.id === editingId)
+    if (!currentGroup) return
+    
+    // Update group details (keeping capacity and available unchanged)
+    api.updateGroup(db, editingId, {
+      name: editingName.trim(),
+      capacity: currentGroup.capacity,
+      available: currentGroup.available,
+      when: editingWhen.trim()
+    })
+    
+    // Update therapist assignment if changed
+    const existingAssignment = db.therapistsInGroups.find(x => x.groupId === editingId)
+    if (editingTherapistId) {
+      if (existingAssignment) {
+        if (existingAssignment.therapistId !== editingTherapistId) {
+          // Remove old assignment
+          api.removeTherapistFromGroup(db, existingAssignment.therapistId, editingId)
+          // Add new assignment
+          api.addTherapistToGroup(db, editingTherapistId, editingId)
+        }
+      } else {
+        // Add new assignment
+        api.addTherapistToGroup(db, editingTherapistId, editingId)
+      }
+    } else if (existingAssignment) {
+      // Remove therapist if no therapist is selected
+      api.removeTherapistFromGroup(db, existingAssignment.therapistId, editingId)
+    }
+    
+    cancelEdit()
+    db = load()
+  }
+  
+  function deleteGroup(id: string) {
+    if (confirm('למחוק קבוצה?')) {
+      api.removeGroup(db, id)
+      db = load()
+    }
+  }
   
   function editGroup(id: string) {
     goto(`groups/${id}`)
@@ -91,8 +158,8 @@
       } else if (sortField === 'when') {
         compareValue = (a.when || '').localeCompare(b.when || '', 'he')
       } else if (sortField === 'available') {
-        const availableA = (a.capacity || 15) - db.patientsInGroups.filter(x => x.groupId === a.id && x.enrolled === 1).length
-        const availableB = (b.capacity || 15) - db.patientsInGroups.filter(x => x.groupId === b.id && x.enrolled === 1).length
+        const availableA = api.getAvailableWithActiveSubscriptions(db, a.id)
+        const availableB = api.getAvailableWithActiveSubscriptions(db, b.id)
         compareValue = availableA - availableB
       }
       
@@ -234,7 +301,7 @@
           {/if}
         </button>
       </div>
-      <div class="w-[150px]">
+      <div class="flex gap-1 min-w-[90px] justify-end">
         <!-- Empty space for action buttons column -->
       </div>
     </div>
@@ -243,56 +310,119 @@
       {#each sortedGroups as g (g.id)}
         {@const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === g.id)}
         {@const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null}
-        {@const enrolledPatientCount = db.patientsInGroups.filter(x => x.groupId === g.id && x.enrolled === 1).length}
-        {@const realAvailable = (g.capacity || 15) - enrolledPatientCount}
-        <div class="flex items-center py-2">
-          <div class="flex-1 grid" style="grid-template-columns: 50px minmax(100px, 1fr) minmax(100px, 1fr) 3fr;">
-            <div class="text-gray-600 text-center">
-              <span class="{realAvailable <= 0 ? 'text-red-600 font-bold' : realAvailable <= 3 ? 'text-orange-500' : ''}">
-                {realAvailable}
-              </span>
-            </div>
-            <div class="text-gray-600 text-center">
-              <span>{therapist ? therapist.name : '-'}</span>
-            </div>
-            <div class="text-gray-600 text-center">
-              <span>{g.when || 'open'}</span>
-            </div>
-            <div class="text-gray-900 text-center">
-              <span class="font-medium">{g.name}</span>
-            </div>
+        {@const realAvailable = api.getAvailableWithActiveSubscriptions(db, g.id)}
+        <div class="flex {editingId === g.id ? 'flex-row-reverse' : ''} items-center py-2 gap-4">
+          <div class="flex-1">
+            {#if editingId === g.id}
+              <div class="flex items-center" style="gap: 8px; padding-right: 58px;">
+                <!-- Therapist selector (under therapist header) -->
+                <select 
+                  class="border rounded px-3 py-1 text-sm text-center"
+                  style="min-width: 150px; width: 200px;"
+                  bind:value={editingTherapistId}
+                  dir="rtl"
+                >
+                  <option value="">בחר מנחה</option>
+                  {#each db.therapists as therapist}
+                    <option value={therapist.id}>{therapist.name}</option>
+                  {/each}
+                </select>
+                <!-- When field (under when header) -->
+                <input 
+                  type="text"
+                  class="border rounded px-3 py-1 text-sm text-center"
+                  style="min-width: 100px; width: 150px;"
+                  bind:value={editingWhen}
+                  dir="rtl"
+                  placeholder="מתי"
+                />
+                <!-- Group name (under group name header, takes remaining space) -->
+                <input 
+                  type="text"
+                  class="border rounded px-3 py-1 text-sm text-center font-medium"
+                  style="flex: 1;"
+                  bind:value={editingName}
+                  dir="rtl"
+                  placeholder="שם קבוצה"
+                />
+              </div>
+            {:else}
+              <div class="grid" style="grid-template-columns: 50px minmax(100px, 1fr) minmax(100px, 1fr) 3fr;">
+                <div class="text-gray-600 text-center">
+                  <span class="{realAvailable <= 0 ? 'text-red-600 font-bold' : realAvailable <= 3 ? 'text-orange-500' : ''}" dir="ltr" style="display: inline-block;">
+                    {realAvailable}
+                  </span>
+                </div>
+                <div class="text-gray-600 text-center">
+                  <span>{therapist ? therapist.name : '-'}</span>
+                </div>
+                <div class="text-gray-600 text-center">
+                  <span>{g.when || 'open'}</span>
+                </div>
+                <div class="text-gray-900 text-center">
+                  <span class="font-medium">{g.name}</span>
+                </div>
+              </div>
+            {/if}
           </div>
-          <div class="flex gap-0.5 w-[150px] justify-end">
-            <button 
-              class="text-indigo-600 hover:text-indigo-700 p-0.5"
-              on:click={() => viewPatients(g.id)}
-              title="מטופלים"
-              aria-label="מטופלים"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </button>
-            <button 
-              class="text-green-600 hover:text-green-700 p-0.5"
-              on:click={() => attendanceGroup(g.id)}
-              title="נוכחות"
-              aria-label="נוכחות"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-            <button 
-              class="text-blue-600 hover:text-blue-700 p-0.5"
-              on:click={() => editGroup(g.id)}
-              title="ערוך"
-              aria-label="ערוך"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
+          <div class="flex gap-1" style="min-width: 90px;">
+            {#if editingId === g.id}
+              <button 
+                class="big-blue-button" 
+                style="height: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;"
+                on:click={saveEdit}
+              >
+                שמור
+              </button>
+              <button 
+                class="big-orange-button" 
+                style="height: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;"
+                on:click={cancelEdit}
+              >
+                ביטול
+              </button>
+            {:else}
+              <button 
+                class="text-indigo-600 hover:text-indigo-700 p-1"
+                on:click={() => viewPatients(g.id)}
+                title="מטופלים"
+                aria-label="מטופלים"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+              <button 
+                class="text-green-600 hover:text-green-700 p-1"
+                on:click={() => attendanceGroup(g.id)}
+                title="נוכחות"
+                aria-label="נוכחות"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button 
+                class="text-blue-600 hover:text-blue-700 p-1"
+                on:click={() => startEdit(g)}
+                title="ערוך"
+                aria-label="ערוך"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+              <button 
+                class="text-red-600 hover:text-red-700 p-1"
+                on:click={() => deleteGroup(g.id)}
+                title="מחק"
+                aria-label="מחק"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            {/if}
           </div>
         </div>
       {/each}

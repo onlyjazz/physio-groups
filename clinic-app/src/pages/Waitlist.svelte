@@ -8,15 +8,14 @@
   interface WaitlistItem {
     groupId: string
     patientId: string
+    patient: any // Full patient object
+    pig: any // PatientsInGroups object
     groupName: string
     available: number
-    patientName: string
     createdAt: number
   }
   
-  // Sorting state - default to newest first
-  let sortColumn: 'groupName' | 'available' | 'patientName' | 'createdAt' = 'createdAt'
-  let sortDirection: 'asc' | 'desc' = 'desc'
+  // No sorting for now to match PatientsInGroup
   
   // Get all waitlisted patients with their group information
   function getWaitlistedPatients(): WaitlistItem[] {
@@ -28,49 +27,28 @@
         const patient = db.patients.find(p => p.id === pig.patientId)
         
         if (group && patient) {
-          // Calculate available spots correctly based on enrolled and waitlisted patients
-          const enrolledInGroup = db.patientsInGroups.filter(p => p.groupId === group.id && p.enrolled === 1).length
-          const waitlistedInGroup = db.patientsInGroups.filter(p => p.groupId === group.id && p.enrolled === 0).length
-          const availableSpots = group.capacity - enrolledInGroup - waitlistedInGroup
+          // Calculate available spots based on active subscriptions
+          const availableSpots = api.getAvailableWithActiveSubscriptions(db, group.id)
           
           waitlisted.push({
             groupId: group.id,
             patientId: patient.id,
+            patient: patient,
+            pig: pig,
             groupName: group.name,
             available: availableSpots,
-            patientName: `${patient.firstName} ${patient.lastName}`,
             createdAt: pig.createdAt
           })
         }
       }
     }
     
-    // Sort the data
-    const sorted = waitlisted.sort((a, b) => {
-      let aVal = a[sortColumn]
-      let bVal = b[sortColumn]
-      
-      // Handle string comparison for names
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        aVal = aVal.toLowerCase()
-        bVal = bVal.toLowerCase()
-      }
-      
-      if (sortDirection === 'asc') {
-        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
-      } else {
-        return aVal > bVal ? -1 : aVal < bVal ? 1 : 0
-      }
-    })
-    
-    return sorted
+    // Sort by creation date (newest first)
+    return waitlisted.sort((a, b) => b.createdAt - a.createdAt)
   }
   
   // Make dependencies explicit for Svelte reactivity
   $: waitlistedPatients = (() => {
-    // Access variables to establish dependency
-    sortColumn;
-    sortDirection;
     db;
     return getWaitlistedPatients();
   })()
@@ -82,24 +60,33 @@
     }
   }
   
-  function goToRegistration(patientId: string, groupId: string) {
-    goto(`registration/${patientId}/${groupId}`)
+  // Get the latest payment period for a patient in a group
+  function getPaymentPeriod(patientId: string, groupId: string): string | null {
+    const payments = db.patientPayments
+      .filter(p => p.patientId === patientId && p.groupId === groupId)
+      .sort((a, b) => b.createdAt - a.createdAt)
+    
+    if (payments.length === 0) return null
+    
+    const latest = payments[0]
+    // Format: MM/YY-MM/YY for compact display
+    const fromParts = latest.fromMonth.split('/')
+    const toParts = latest.toMonth.split('/')
+    
+    const fromMonth = fromParts[0]
+    const fromYear = fromParts[1]?.substring(2) // Last 2 digits of year
+    const toMonth = toParts[0]
+    const toYear = toParts[1]?.substring(2) // Last 2 digits of year
+    
+    return `${fromMonth}/${fromYear}-${toMonth}/${toYear}`
   }
+  
   
   // Refresh data
   function refresh() {
     db = load()
   }
   
-  // Sort handling
-  function handleSort(column: typeof sortColumn) {
-    if (sortColumn === column) {
-      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    } else {
-      sortColumn = column
-      sortDirection = 'asc'
-    }
-  }
   
   // Export to CSV
   function exportToCSV() {
@@ -155,111 +142,63 @@
     {#if waitlistedPatients.length === 0}
       <p class="text-center text-gray-500 py-8">אין מטופלים ממתינים</p>
     {:else}
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-gray-50">
-              <th class="px-2 py-3 text-left w-12">
-                <span class="text-sm font-medium text-gray-600">פעולות</span>
-              </th>
-              <th class="px-2 py-3">
-                <button 
-                  class="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center justify-center w-full"
-                  on:click={() => handleSort('createdAt')}
-                >
-                  תאריך הצטרפות
-                  {#if sortColumn === 'createdAt'}
-                    <span class="mr-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  {/if}
-                </button>
-              </th>
-              <th class="px-2 py-3">
-                <button 
-                  class="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center justify-center w-full"
-                  on:click={() => handleSort('patientName')}
-                >
-                  שם מטופל
-                  {#if sortColumn === 'patientName'}
-                    <span class="mr-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  {/if}
-                </button>
-              </th>
-              <th class="px-2 py-3 w-20">
-                <button 
-                  class="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center justify-center w-full"
-                  on:click={() => handleSort('available')}
-                >
-                  פנוי
-                  {#if sortColumn === 'available'}
-                    <span class="mr-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  {/if}
-                </button>
-              </th>
-              <th class="px-2 py-3">
-                <button 
-                  class="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center justify-center w-full"
-                  on:click={() => handleSort('groupName')}
-                >
-                  שם קבוצה
-                  {#if sortColumn === 'groupName'}
-                    <span class="mr-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  {/if}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each waitlistedPatients as item}
-              <tr class="hover:bg-gray-50">
-                <td class="px-2 py-3 text-left">
-                  <div class="flex gap-2">
-                    <button 
-                      class="text-red-600 hover:text-red-700"
-                      on:click={() => removeFromWaitlist(item.groupId, item.patientId, item.patientName)}
-                      title="הסר מרשימת המתנה"
-                      aria-label="הסר מרשימת המתנה"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                    <button 
-                      class="text-green-600 hover:text-green-700"
-                      on:click={() => goToRegistration(item.patientId, item.groupId)}
-                      title="לתשלום"
-                      aria-label="לתשלום"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-                <td class="px-2 py-3 text-sm text-center text-gray-600">
-                  {new Date(item.createdAt).toLocaleDateString('he-IL', { 
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit'
-                  })}
-                </td>
-                <td class="px-2 py-3 text-sm text-center">{item.patientName}</td>
-                <td class="px-2 py-3 text-sm text-center">
-                  <span class="font-semibold"
-                        class:text-red-600={item.available <= 0} 
-                        class:text-orange-500={item.available > 0 && item.available <= 3}
-                        class:text-green-600={item.available > 3}
-                        dir="ltr"
-                        style="display: inline-block;">
-                    {item.available}
-                  </span>
-                </td>
-                <td class="px-2 py-3 text-sm font-medium text-center">{item.groupName}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+      <!-- Header row (matching PatientsInGroup layout) -->
+      <div class="flex items-center py-2 border-b mb-2">
+        <div class="w-20">
+          <!-- Space for action buttons -->
+        </div>
+        <div class="flex-1 grid" style="grid-template-columns: 100px 50px 120px 140px 120px 3fr;">
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">תאריך צירוף</div>
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">פנוי</div>
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבצות</div>
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
+          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
+        </div>
+      </div>
+      
+      <div class="space-y-2">
+        {#each waitlistedPatients as item}
+          {@const paymentPeriod = getPaymentPeriod(item.patientId, item.groupId)}
+          <div class="flex items-center py-2 hover:bg-gray-50 rounded transition-colors">
+            <div class="w-20 flex justify-center">
+              <button 
+                class="text-red-600 hover:text-red-700 p-1"
+                on:click={() => removeFromWaitlist(item.groupId, item.patientId, `${item.patient.firstName} ${item.patient.lastName}`)}
+                title="הסר מרשימת המתנה"
+                aria-label="הסר מרשימת המתנה"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+            <div class="flex-1 grid" style="grid-template-columns: 100px 50px 120px 140px 120px 3fr;">
+              <div class="text-sm text-gray-600 text-right px-2">
+                {new Date(item.createdAt).toLocaleDateString('he-IL', { 
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: '2-digit'
+                })}
+              </div>
+              <div class="text-sm text-right px-2">
+                <span class="font-semibold"
+                      class:text-red-600={item.available <= 0} 
+                      class:text-orange-500={item.available > 0 && item.available <= 3}
+                      class:text-green-600={item.available > 3}
+                      dir="ltr"
+                      style="display: inline-block;">
+                  {item.available}
+                </span>
+              </div>
+              <div class="text-sm font-medium text-right px-2">{item.groupName}</div>
+              <div class="text-sm text-gray-600 text-right px-2">{item.patient.phone}</div>
+              <div class="text-sm text-gray-600 text-right px-2">{item.patient.nationalId}</div>
+              <div class="font-medium text-right px-2">{item.patient.firstName} {item.patient.lastName}</div>
+            </div>
+          </div>
+        {/each}
       </div>
       
       <div class="mt-4 pt-4 border-t">

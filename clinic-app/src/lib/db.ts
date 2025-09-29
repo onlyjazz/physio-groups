@@ -317,6 +317,73 @@ export const api = {
       group.updatedAt = Date.now()
     })
     save(db)
+  },
+  
+  // Check if a patient has an active subscription for a group in the current month
+  hasActiveSubscription(db: Db, patientId: ID, groupId: ID): boolean {
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1 // 1-12
+    const currentYear = now.getFullYear()
+    
+    // Find payments for this patient and group
+    const payments = db.patientPayments.filter(p => 
+      p.patientId === patientId && p.groupId === groupId
+    )
+    
+    // Check if any payment covers the current month
+    return payments.some(payment => {
+      // Parse fromMonth (MM/YYYY)
+      const [fromMonthStr, fromYearStr] = payment.fromMonth.split('/')
+      const fromMonth = parseInt(fromMonthStr)
+      const fromYear = parseInt(fromYearStr)
+      
+      // Parse toMonth (MM/YYYY)
+      const [toMonthStr, toYearStr] = payment.toMonth.split('/')
+      const toMonth = parseInt(toMonthStr)
+      const toYear = parseInt(toYearStr)
+      
+      // Check if current date falls within the payment period
+      const currentDate = currentYear * 12 + currentMonth
+      const fromDate = fromYear * 12 + fromMonth
+      const toDate = toYear * 12 + toMonth
+      
+      return fromDate <= currentDate && currentDate <= toDate
+    })
+  },
+  
+  // Get count of patients with active subscriptions for a group
+  getActiveSubscriptionCount(db: Db, groupId: ID): number {
+    // Get all enrolled patients in the group
+    const enrolledPatients = db.patientsInGroups.filter(pig => 
+      pig.groupId === groupId && pig.enrolled === 1
+    )
+    
+    // Count those with active subscriptions
+    return enrolledPatients.filter(pig => 
+      api.hasActiveSubscription(db, pig.patientId, groupId)
+    ).length
+  },
+  
+  // Get available spots considering only active subscriptions
+  getAvailableWithActiveSubscriptions(db: Db, groupId: ID): number {
+    const group = db.groups.find(g => g.id === groupId)
+    if (!group) return 0
+    
+    const activeCount = api.getActiveSubscriptionCount(db, groupId)
+    const waitlistCount = db.patientsInGroups.filter(pig => 
+      pig.groupId === groupId && pig.enrolled === 0
+    ).length
+    
+    return group.capacity - activeCount - waitlistCount
+  },
+  
+  // Get patients with active subscriptions in a group
+  getPatientsWithActiveSubscriptions(db: Db, groupId: ID): PatientsInGroups[] {
+    return db.patientsInGroups.filter(pig => 
+      pig.groupId === groupId && 
+      pig.enrolled === 1 &&
+      api.hasActiveSubscription(db, pig.patientId, groupId)
+    )
   }
 }
 

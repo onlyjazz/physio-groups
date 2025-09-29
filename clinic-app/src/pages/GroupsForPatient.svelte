@@ -32,6 +32,7 @@
       const group = db.groups.find(g => g.id === pig.groupId)
       const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === pig.groupId)
       const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null
+      const paymentPeriod = patientId ? getPaymentPeriod(patientId, pig.groupId) : null
       
       return group ? {
         'שם מטופל': `${patient.firstName} ${patient.lastName}`,
@@ -39,6 +40,7 @@
         'שם קבוצה': group.name,
         'מתי': group.when || 'open',
         'מנחה': therapist?.name || '-',
+        'תקופת תשלום': paymentPeriod || '-',
         'מספר קבלה': pig.receipt || '',
         'סטטוס': 'רשום'
       } : null
@@ -72,6 +74,27 @@
   
   function goToGroup(groupId: string) {
     goto(`/groups/${groupId}`)
+  }
+  
+  // Get the latest payment period for a patient in a group
+  function getPaymentPeriod(patientId: string, groupId: string): string | null {
+    const payments = db.patientPayments
+      .filter(p => p.patientId === patientId && p.groupId === groupId)
+      .sort((a, b) => b.createdAt - a.createdAt)
+    
+    if (payments.length === 0) return null
+    
+    const latest = payments[0]
+    // Format: MM/YY-MM/YY for compact display
+    const fromParts = latest.fromMonth.split('/')
+    const toParts = latest.toMonth.split('/')
+    
+    const fromMonth = fromParts[0]
+    const fromYear = fromParts[1]?.substring(2) // Last 2 digits of year
+    const toMonth = toParts[0]
+    const toYear = toParts[1]?.substring(2) // Last 2 digits of year
+    
+    return `${fromMonth}/${fromYear}-${toMonth}/${toYear}`
   }
 </script>
 
@@ -135,6 +158,7 @@
             {@const group = db.groups.find(g => g.id === pig.groupId)}
             {@const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === pig.groupId)}
             {@const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null}
+            {@const paymentPeriod = patientId ? getPaymentPeriod(patientId, pig.groupId) : null}
             {#if group}
               <div class="border rounded p-3 hover:bg-gray-50">
                 <div class="flex items-center justify-between">
@@ -163,6 +187,9 @@
                     <div class="font-medium text-lg">{group.name}</div>
                     <div class="flex gap-4 text-sm text-gray-600 justify-end">
                       <span>קבלה: {pig.receipt || '-'}</span>
+                      {#if paymentPeriod}
+                        <span class="font-medium text-green-700">תקופה: {paymentPeriod}</span>
+                      {/if}
                       <span>מנחה: {therapist?.name || '-'}</span>
                       <span>מתי: {group.when || 'open'}</span>
                     </div>

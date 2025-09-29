@@ -29,10 +29,11 @@
   
   // Get selected group details
   $: selectedGroup = selectedGroupId ? db.groups.find(g => g.id === selectedGroupId) : null
-  $: selectedGroupEnrolled = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 1).length : 0
+  $: selectedGroupActiveCount = selectedGroupId ? api.getActiveSubscriptionCount(db, selectedGroupId) : 0
   $: selectedGroupWaitlist = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 0).length : 0
-  $: selectedGroupAvailable = selectedGroup ? selectedGroup.capacity - selectedGroupEnrolled - selectedGroupWaitlist : 0
+  $: selectedGroupAvailable = selectedGroupId ? api.getAvailableWithActiveSubscriptions(db, selectedGroupId) : 0
   $: patientAlreadyInGroup = patientId && selectedGroupId ? db.patientsInGroups.find(x => x.groupId === selectedGroupId && x.patientId === patientId) : null
+  $: patientHasActiveSubscription = patientId && selectedGroupId ? api.hasActiveSubscription(db, patientId, selectedGroupId) : false
   
   // Generate month options
   const months = [
@@ -226,8 +227,8 @@
               <div><span class="font-medium">{selectedGroup.name}</span></div>
               <div class="text-sm text-gray-600">מתי: {selectedGroup.when || '-'}</div>
               <div class="text-sm text-gray-600">קיבולת: {selectedGroup.capacity}</div>
-              <div class="text-sm font-medium {selectedGroupAvailable <= 0 ? 'text-red-600' : selectedGroupAvailable <= 3 ? 'text-orange-500' : 'text-green-600'}">
-                מקומות פנויים: {selectedGroupAvailable}
+              <div class="text-sm text-gray-600">
+                <span class="font-medium {selectedGroupAvailable <= 0 ? 'text-red-600' : selectedGroupAvailable <= 3 ? 'text-orange-500' : 'text-green-600'}" dir="ltr" style="display: inline-block;">{selectedGroupAvailable}</span> :מקומות פנויים
               </div>
               {#if selectedGroupWaitlist > 0}
                 <div class="text-sm text-orange-600">ממתינים: {selectedGroupWaitlist}</div>

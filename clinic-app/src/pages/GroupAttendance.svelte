@@ -13,8 +13,8 @@
   // Get today's date in YYYY-MM-DD format
   let selectedDate = new Date().toISOString().split('T')[0]
   
-  // Get patients in this group (only enrolled, not waitlisted)
-  $: patientsInGroup = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1) : []
+  // Get patients in this group with active subscriptions only
+  $: patientsInGroup = groupId ? api.getPatientsWithActiveSubscriptions(db, groupId) : []
   
   // Get the default therapist for this group
   $: defaultTherapistId = groupId ? 
