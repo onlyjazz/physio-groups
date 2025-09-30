@@ -4,6 +4,7 @@
   import { goto } from '../router'
   
   let db: Db = load()
+  let dbVersion = 0 // Force reactivity updates
   
   // Get patient ID and group ID from route
   $: patientId = $route.segments[0] || null
@@ -27,11 +28,29 @@
   let receiptNumber = ''
   let paymentDate = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
   
-  // Get selected group details
-  $: selectedGroup = selectedGroupId ? db.groups.find(g => g.id === selectedGroupId) : null
-  $: selectedGroupActiveCount = selectedGroupId ? api.getActiveSubscriptionCount(db, selectedGroupId) : 0
-  $: selectedGroupWaitlist = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 0).length : 0
-  $: selectedGroupAvailable = selectedGroupId ? api.getAvailableWithActiveSubscriptions(db, selectedGroupId) : 0
+  // Get selected group details - dbVersion forces recalculation
+  $: selectedGroup = selectedGroupId && dbVersion >= 0 ? db.groups.find(g => g.id === selectedGroupId) : null
+  $: selectedGroupActiveCount = selectedGroupId && dbVersion >= 0 ? api.getActiveSubscriptionCount(db, selectedGroupId) : 0
+  $: selectedGroupWaitlist = selectedGroupId && dbVersion >= 0 ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 0).length : 0
+  // For registration, calculate available count based on active subscriptions
+  // This ensures consistency with PatientsInGroup page
+  $: selectedGroupAvailable = selectedGroupId && dbVersion >= 0 ? api.getAvailableWithActiveSubscriptions(db, selectedGroupId) : 0
+  
+  // Keep track of raw enrolled count for debugging
+  $: actualEnrolledCount = selectedGroupId ? db.patientsInGroups.filter(x => x.groupId === selectedGroupId && x.enrolled === 1).length : 0
+  $: rawAvailable = selectedGroup ? selectedGroup.capacity - actualEnrolledCount : 0
+  
+  // Log discrepancy if exists
+  $: if (selectedGroup && selectedGroupAvailable !== rawAvailable) {
+    console.warn('Available count mismatch!', {
+      activeSubscriptionBased: selectedGroupAvailable,
+      rawEnrollmentBased: rawAvailable,
+      capacity: selectedGroup.capacity,
+      enrolled: actualEnrolledCount,
+      activeCount: selectedGroupActiveCount
+    })
+  }
+  
   $: patientAlreadyInGroup = patientId && selectedGroupId ? db.patientsInGroups.find(x => x.groupId === selectedGroupId && x.patientId === patientId) : null
   $: patientHasActiveSubscription = patientId && selectedGroupId ? api.hasActiveSubscription(db, patientId, selectedGroupId) : false
   
@@ -61,40 +80,20 @@
       return
     }
     
-    // Check if group has availability
-    const hasAvailability = selectedGroupAvailable > 0
-    
-    // If group has availability, require payment details
-    if (hasAvailability && (!amount || !receiptNumber)) {
-      alert('נא למלא את כל פרטי התשלום')
-      return
-    }
+    // Validate that from date is not after to date
     
     // First check if patient is already in the group
     const existingEntry = db.patientsInGroups.find(
       pig => pig.patientId === patientId && pig.groupId === selectedGroupId
     )
     
-    if (!existingEntry) {
-      // Add patient to group (will automatically go to waitlist if no availability)
-      api.addPatientToGroup(db, selectedGroupId, patientId, receiptNumber || '')
-    } else {
-      // Patient is already in group
-      if (!hasAvailability && existingEntry.enrolled === 1) {
-        // If no availability but patient is enrolled, move to waitlist
-        existingEntry.enrolled = 0
-        existingEntry.updatedAt = Date.now()
-        // Clear receipt since waitlist doesn't require payment
-        existingEntry.receipt = ''
-        save(db)
-      } else if (hasAvailability && receiptNumber) {
-        // If there's availability and we have a receipt, update it
-        api.updatePatientReceipt(db, selectedGroupId, patientId, receiptNumber)
-      }
-    }
+    // Check if patient already has active subscription (before adding new payment)
+    const alreadyHasActiveSubscription = api.hasActiveSubscription(db, patientId, selectedGroupId)
     
-    // Only add payment record if payment details were provided
-    if (amount && receiptNumber) {
+    // IMPORTANT: Add payment FIRST if provided, so that active subscription check works
+    // Note: amount can be 0 or any positive number
+    let paymentAdded = false
+    if (amount !== null && amount !== undefined && amount >= 0 && receiptNumber) {
       // Convert date from YYYY-MM-DD to DD/MM/YYYY
       const [year, month, day] = paymentDate.split('-')
       const formattedPaymentDate = `${day}/${month}/${year}`
@@ -109,16 +108,56 @@
         paymentMethod,
         receiptNumber
       })
+      paymentAdded = true
+      
+      // Update receipt if patient is already in group
+      if (existingEntry) {
+        api.updatePatientReceipt(db, selectedGroupId, patientId, receiptNumber)
+      }
+    }
+    
+    // For new patients, check availability based on active subscriptions
+    // This should match what's displayed to the user
+    const hasAvailability = api.getAvailableWithActiveSubscriptions(db, selectedGroupId) > 0
+    
+    // If group has availability and payment not added, require payment details  
+    if (!existingEntry && hasAvailability && !paymentAdded) {
+      alert('נא למלא את כל פרטי התשלום')
+      return
+    }
+    
+    // Now add patient to group or update existing entry
+    if (!existingEntry) {
+      // Add patient to group (will now correctly check active subscriptions)
+      api.addPatientToGroup(db, selectedGroupId, patientId, receiptNumber || '')
+    } else if (existingEntry && !alreadyHasActiveSubscription && paymentAdded) {
+      // Patient is in group but didn't have active subscription before, ensure they're enrolled
+      if (existingEntry.enrolled === 0) {
+        // Move from waitlist to enrolled if payment was added
+        existingEntry.enrolled = 1
+        existingEntry.updatedAt = Date.now()
+        save(db)
+      }
     }
     
     // Reload database to reflect changes
     db = load()
+    dbVersion++ // Trigger reactivity updates
+    
+    // Get updated group to check final status
+    const updatedGroup = db.groups.find(g => g.id === selectedGroupId)
+    const wasActuallyEnrolled = !existingEntry && updatedGroup && updatedGroup.available >= 0
     
     // Show appropriate success message
-    if (hasAvailability) {
+    if (wasActuallyEnrolled && updatedGroup && updatedGroup.available > 0) {
       alert('התשלום והרישום נרשמו בהצלחה')
-    } else {
+    } else if (!existingEntry && updatedGroup && updatedGroup.available === 0) {
+      // This happens when we just filled the last spot
+      alert('נרשם בהצלחה - הקבוצה התמלאה')
+    } else if (!existingEntry) {
       alert('המטופל נוסף לרשימת המתנה')
+    } else {
+      alert('התשלום נרשם בהצלחה')
     }
     
     // Reset form
@@ -180,32 +219,35 @@
         
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap ml-3">תקופה</label>
-        <div class="flex items-center gap-2">
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-xs text-gray-500">מ:</label>
+        <div class="flex flex-row-reverse items-center gap-2">
+            <!-- In RTL layout with flex-row-reverse: -->
+            <!-- Elements appear right-to-left, so first element in code appears rightmost -->
+            
+            <!-- FROM date (מ) - should appear on the RIGHT in Hebrew reading -->
+            <label class="text-xs text-gray-500">:מ</label>
+            <select class="border rounded px-2 h-10" bind:value={fromYear} dir="rtl">
+              {#each years as year}
+                <option value={year}>{year}</option>
+              {/each}
+            </select>
             <select class="border rounded px-2 h-10" bind:value={fromMonth} dir="rtl">
-            {#each months as month}
-              <option value={month.value}>{month.label}</option>
-            {/each}
-          </select>
-          <select class="border rounded px-2 h-10" bind:value={fromYear} dir="rtl">
-            {#each years as year}
-              <option value={year}>{year}</option>
-            {/each}
-          </select>
-          
-            <!-- svelte-ignore a11y_label_has_associated_control -->
-            <label class="text-xs text-gray-500 ml-2">עד:</label>
-          <select class="border rounded px-2 h-10" bind:value={toMonth} dir="rtl">
-            {#each months as month}
-              <option value={month.value}>{month.label}</option>
-            {/each}
-          </select>
-          <select class="border rounded px-2 h-10" bind:value={toYear} dir="rtl">
-            {#each years as year}
-              <option value={year}>{year}</option>
-            {/each}
-          </select>
+              {#each months as month}
+                <option value={month.value}>{month.label}</option>
+              {/each}
+            </select>
+            
+            <!-- TO date (עד) - should appear on the LEFT in Hebrew reading -->
+            <label class="text-xs text-gray-500">:עד</label>
+            <select class="border rounded px-2 h-10" bind:value={toYear} dir="rtl">
+              {#each years as year}
+                <option value={year}>{year}</option>
+              {/each}
+            </select>
+            <select class="border rounded px-2 h-10" bind:value={toMonth} dir="rtl">
+              {#each months as month}
+                <option value={month.value}>{month.label}</option>
+              {/each}
+            </select>
         </div>
       </div>
 
@@ -244,20 +286,6 @@
       </div>
 
       <!-- Row 3: Payment details -->
-      {#if selectedGroupAvailable <= 0 && selectedGroup}
-        <div class="bg-orange-50 border border-orange-200 rounded p-3">
-          <p class="text-sm text-orange-800 text-center">
-            הקבוצה מלאה - המטופל יצורף לרשימת המתנה (ללא תשלום)
-          </p>
-        </div>
-      {:else if selectedGroup}
-        <div class="bg-green-50 border border-green-200 rounded p-3">
-          <p class="text-sm text-green-800 text-center">
-            יש מקום פנוי - נא למלא את פרטי התשלום
-          </p>
-        </div>
-      {/if}
-      
       <div class="flex flex-row-reverse items-center gap-3 {selectedGroupAvailable <= 0 ? 'opacity-50' : ''}" >
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label class="text-sm text-gray-600 whitespace-nowrap">סכום</label>
@@ -310,7 +338,10 @@
           class="big-green-button"
           on:click={savePayment}
         >
-        {selectedGroupAvailable <= 0 ? 'שמור להמתנה' : (patientAlreadyInGroup && patientAlreadyInGroup.enrolled === 1 ? 'שמור תשלום' : 'שמור תשלום להרשמה')}
+        {selectedGroupAvailable > 0 ? 
+          (patientAlreadyInGroup && patientAlreadyInGroup.enrolled === 1 ? 'שמור תשלום' : 'שמור תשלום והרשמה') : 
+          'הכנס לרשימת המתנה'
+        }
         </button>
       </div>
     </div>

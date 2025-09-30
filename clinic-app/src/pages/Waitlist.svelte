@@ -15,7 +15,9 @@
     createdAt: number
   }
   
-  // No sorting for now to match PatientsInGroup
+  // Sorting state
+  let sortColumn: 'name' | 'group' | 'available' | 'date' | null = null
+  let sortDirection: 'asc' | 'desc' = 'asc'
   
   // Get all waitlisted patients with their group information
   function getWaitlistedPatients(): WaitlistItem[] {
@@ -43,13 +45,59 @@
       }
     }
     
-    // Sort by creation date (newest first)
-    return waitlisted.sort((a, b) => b.createdAt - a.createdAt)
+    // Apply sorting
+    if (sortColumn) {
+      waitlisted.sort((a, b) => {
+        let aVal: any, bVal: any
+        
+        switch (sortColumn) {
+          case 'name':
+            aVal = `${a.patient.lastName} ${a.patient.firstName}`.toLowerCase()
+            bVal = `${b.patient.lastName} ${b.patient.firstName}`.toLowerCase()
+            break
+          case 'group':
+            aVal = a.groupName.toLowerCase()
+            bVal = b.groupName.toLowerCase()
+            break
+          case 'available':
+            aVal = a.available
+            bVal = b.available
+            break
+          case 'date':
+            aVal = a.createdAt
+            bVal = b.createdAt
+            break
+          default:
+            return 0
+        }
+        
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    } else {
+      // Default sort by creation date (newest first)
+      waitlisted.sort((a, b) => b.createdAt - a.createdAt)
+    }
+    
+    return waitlisted
+  }
+  
+  // Sort function
+  function sort(column: 'name' | 'group' | 'available' | 'date') {
+    if (sortColumn === column) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortColumn = column
+      sortDirection = 'asc'
+    }
   }
   
   // Make dependencies explicit for Svelte reactivity
   $: waitlistedPatients = (() => {
     db;
+    sortColumn;
+    sortDirection;
     return getWaitlistedPatients();
   })()
   
@@ -142,60 +190,111 @@
     {#if waitlistedPatients.length === 0}
       <p class="text-center text-gray-500 py-8">אין מטופלים ממתינים</p>
     {:else}
-      <!-- Header row (matching PatientsInGroup layout) -->
-      <div class="flex items-center py-2 border-b mb-2">
-        <div class="w-20">
-          <!-- Space for action buttons -->
+      <!-- Header row (matching Patients page layout) -->
+      <div class="flex items-center gap-4 py-2 border-b mb-2">
+        <div class="text-gray-700 font-semibold text-sm px-2" style="width: 120px;">
+          <button 
+            class="hover:bg-gray-50 px-1 py-1 rounded cursor-pointer"
+            on:click={() => sort('date')}
+          >
+            בהמתנה מ
+            {#if sortColumn === 'date'}
+              <span class="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+            {/if}
+          </button>
         </div>
-        <div class="flex-1 grid" style="grid-template-columns: 100px 50px 120px 140px 120px 3fr;">
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">תאריך צירוף</div>
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">פנוי</div>
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבצות</div>
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
-          <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
+        <div class="text-gray-700 font-semibold text-sm px-2" style="width: 50px;">
+          <button 
+            class="hover:bg-gray-50 px-1 py-1 rounded cursor-pointer"
+            on:click={() => sort('available')}
+          >
+            פנוי
+            {#if sortColumn === 'available'}
+              <span class="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+            {/if}
+          </button>
+        </div>
+        <div class="text-gray-700 font-semibold text-sm text-right" style="width: 120px;">
+          <button 
+            class="hover:bg-gray-50 px-1 py-1 rounded cursor-pointer text-right w-full"
+            on:click={() => sort('group')}
+          >
+            קבוצה
+            {#if sortColumn === 'group'}
+              <span class="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+            {/if}
+          </button>
+        </div>
+        <div class="flex-1 min-w-0">
+          <button 
+            class="py-1 px-2 inline-flex items-center"
+            on:click={() => sort('name')}
+          >
+            <span class="text-gray-700 font-semibold text-sm">פרטי מטופל</span>
+            {#if sortColumn === 'name'}
+              <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
+              </svg>
+            {/if}
+          </button>
+        </div>
+        <div class="flex gap-1 min-w-[80px] justify-end">
+          <!-- Empty space for action buttons column -->
         </div>
       </div>
       
       <div class="space-y-2">
         {#each waitlistedPatients as item}
           {@const paymentPeriod = getPaymentPeriod(item.patientId, item.groupId)}
-          <div class="flex items-center py-2 hover:bg-gray-50 rounded transition-colors">
-            <div class="w-20 flex justify-center">
+          <div class="flex items-center gap-4 py-2">
+            <div class="text-sm text-gray-600 text-center" style="width: 120px;">
+              {new Date(item.createdAt).toLocaleDateString('he-IL', { 
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+              })}
+            </div>
+            <div class="text-sm text-center" style="width: 50px;">
+              <span class="font-semibold"
+                    class:text-red-600={item.available <= 0} 
+                    class:text-orange-500={item.available > 0 && item.available <= 3}
+                    class:text-green-600={item.available > 3}>
+                {item.available}
+              </span>
+            </div>
+            <div class="text-sm font-medium text-right" style="width: 120px;">
+              {item.groupName}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-gray-900 text-left px-2">
+                <span class="font-medium">{item.patient.firstName} {item.patient.lastName}</span>
+                <span class="text-gray-600 text-sm mr-3">ת.ז. {item.patient.nationalId}</span>
+                <span class="text-gray-600 text-sm">טל. {item.patient.phone}</span>
+              </div>
+            </div>
+            <div class="flex gap-1" style="min-width: 80px;">
+              <button 
+                class="text-green-600 hover:text-green-700 p-1"
+                on:click={() => goto(`/registration/${item.patientId}/${item.groupId}`)}
+                title="רישום תשלום"
+                aria-label="רישום תשלום"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
               <button 
                 class="text-red-600 hover:text-red-700 p-1"
                 on:click={() => removeFromWaitlist(item.groupId, item.patientId, `${item.patient.firstName} ${item.patient.lastName}`)}
                 title="הסר מרשימת המתנה"
                 aria-label="הסר מרשימת המתנה"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
-            </div>
-            <div class="flex-1 grid" style="grid-template-columns: 100px 50px 120px 140px 120px 3fr;">
-              <div class="text-sm text-gray-600 text-right px-2">
-                {new Date(item.createdAt).toLocaleDateString('he-IL', { 
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit'
-                })}
-              </div>
-              <div class="text-sm text-right px-2">
-                <span class="font-semibold"
-                      class:text-red-600={item.available <= 0} 
-                      class:text-orange-500={item.available > 0 && item.available <= 3}
-                      class:text-green-600={item.available > 3}
-                      dir="ltr"
-                      style="display: inline-block;">
-                  {item.available}
-                </span>
-              </div>
-              <div class="text-sm font-medium text-right px-2">{item.groupName}</div>
-              <div class="text-sm text-gray-600 text-right px-2">{item.patient.phone}</div>
-              <div class="text-sm text-gray-600 text-right px-2">{item.patient.nationalId}</div>
-              <div class="font-medium text-right px-2">{item.patient.firstName} {item.patient.lastName}</div>
             </div>
           </div>
         {/each}

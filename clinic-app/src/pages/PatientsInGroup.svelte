@@ -87,18 +87,41 @@
     goto(`history/${patientId}`)
   }
   
-  // Get the latest payment period for a patient in a group
+  // Get the ACTIVE payment period for a patient in a group
   function getPaymentPeriod(patientId: string, groupId: string): string | null {
     const payments = db.patientPayments
       .filter(p => p.patientId === patientId && p.groupId === groupId)
-      .sort((a, b) => b.createdAt - a.createdAt)
     
     if (payments.length === 0) return null
     
-    const latest = payments[0]
+    // Get current date for comparison
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1
+    const currentYear = now.getFullYear()
+    const currentDate = currentYear * 12 + currentMonth
+    
+    // Find the active payment that covers current month
+    const activePayment = payments.find(payment => {
+      const [fromMonthStr, fromYearStr] = payment.fromMonth.split('/')
+      const fromMonth = parseInt(fromMonthStr)
+      const fromYear = parseInt(fromYearStr)
+      
+      const [toMonthStr, toYearStr] = payment.toMonth.split('/')
+      const toMonth = parseInt(toMonthStr)
+      const toYear = parseInt(toYearStr)
+      
+      const fromDate = fromYear * 12 + fromMonth
+      const toDate = toYear * 12 + toMonth
+      
+      return fromDate <= currentDate && currentDate <= toDate
+    })
+    
+    // If no active payment, return the most recent one (for historical reference)
+    const paymentToShow = activePayment || payments.sort((a, b) => b.createdAt - a.createdAt)[0]
+    
     // Format: MM/YY-MM/YY for compact display
-    const fromParts = latest.fromMonth.split('/')
-    const toParts = latest.toMonth.split('/')
+    const fromParts = paymentToShow.fromMonth.split('/')
+    const toParts = paymentToShow.toMonth.split('/')
     
     const fromMonth = fromParts[0]
     const fromYear = fromParts[1]?.substring(2) // Last 2 digits of year

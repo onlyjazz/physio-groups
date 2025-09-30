@@ -164,12 +164,10 @@ export const api = {
     const group = db.groups.find(g => g.id === groupId)
     if (!group) return
     
-    const enrolledCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
-    const waitlistCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 0).length
-    
-    // Only enroll if under capacity AND no waitlist exists
-    // If there's a waitlist, new patients must join it
-    const hasAvailability = enrolledCount < group.capacity && waitlistCount === 0
+    // Use active subscription-based availability for consistency
+    // This matches what the UI shows to users
+    const availableSpots = api.getAvailableWithActiveSubscriptions(db, groupId)
+    const hasAvailability = availableSpots > 0
     
     // Set enrolled to 1 if there's availability, 0 for waitlist
     const enrolled = hasAvailability ? 1 : 0
@@ -187,8 +185,9 @@ export const api = {
     
     // Update available count if patient is enrolled (not waitlisted)
     if (enrolled === 1) {
-      const newAvailable = group.capacity - (enrolledCount + 1)
-      group.available = newAvailable
+      // Recalculate based on the new enrollment count after adding the patient
+      const newEnrolledCount = db.patientsInGroups.filter(x => x.groupId === groupId && x.enrolled === 1).length
+      group.available = group.capacity - newEnrolledCount
       group.updatedAt = Date.now()
     }
     
@@ -370,11 +369,10 @@ export const api = {
     if (!group) return 0
     
     const activeCount = api.getActiveSubscriptionCount(db, groupId)
-    const waitlistCount = db.patientsInGroups.filter(pig => 
-      pig.groupId === groupId && pig.enrolled === 0
-    ).length
+    // Don't subtract waitlist count - waitlisted patients are not taking up capacity!
+    // They're waiting for spots to become available
     
-    return group.capacity - activeCount - waitlistCount
+    return group.capacity - activeCount
   },
   
   // Get patients with active subscriptions in a group

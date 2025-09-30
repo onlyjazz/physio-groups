@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { load, api, type Db, type Group } from '../lib/db'
+  import { load, api, save, type Db, type Group } from '../lib/db'
   import { goto } from '../router'
   import { exportToCSV } from '../lib/csvExport'
   
@@ -7,7 +7,7 @@
   let name = ''
   let capacity = 15
   let available = 15
-  let when = 'open'
+  let when = ''
   let searchQuery = ''
   
   // Inline editing state
@@ -27,14 +27,14 @@
     name = ''
     capacity = 15
     available = 15
-    when = 'open'
+    when = ''
     db = load()
   }
   
   function startEdit(group: Group) {
     editingId = group.id
     editingName = group.name || ''
-    editingWhen = group.when || 'open'
+    editingWhen = group.when || ''
     
     // Get current therapist
     const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === group.id)
@@ -63,23 +63,18 @@
       when: editingWhen.trim()
     })
     
-    // Update therapist assignment if changed
-    const existingAssignment = db.therapistsInGroups.find(x => x.groupId === editingId)
+    // Update therapist assignment
     if (editingTherapistId) {
+      // setTherapistForGroup handles both adding and updating
+      api.setTherapistForGroup(db, editingId, editingTherapistId)
+    } else {
+      // Remove therapist assignment if no therapist selected
+      const existingAssignment = db.therapistsInGroups.find(x => x.groupId === editingId)
       if (existingAssignment) {
-        if (existingAssignment.therapistId !== editingTherapistId) {
-          // Remove old assignment
-          api.removeTherapistFromGroup(db, existingAssignment.therapistId, editingId)
-          // Add new assignment
-          api.addTherapistToGroup(db, editingTherapistId, editingId)
-        }
-      } else {
-        // Add new assignment
-        api.addTherapistToGroup(db, editingTherapistId, editingId)
+        // Remove the assignment by filtering it out
+        db.therapistsInGroups = db.therapistsInGroups.filter(x => x.groupId !== editingId)
+        save(db)
       }
-    } else if (existingAssignment) {
-      // Remove therapist if no therapist is selected
-      api.removeTherapistFromGroup(db, existingAssignment.therapistId, editingId)
     }
     
     cancelEdit()
@@ -175,7 +170,7 @@
       return {
         'שם קבוצה': g.name,
         'מנחה': therapist ? therapist.name : '',
-        'מתי': g.when || 'open',
+        'מתי': g.when,
         'קיבולת': g.capacity || 15,
         'זמין': g.available || 15
       }
@@ -223,7 +218,7 @@
           id="group-when" 
           class="border rounded px-3 h-10" 
           style="text-align: right; width: 150px;"
-          placeholder="מתי" 
+          placeholder="יום ושעה" 
           bind:value={when}
           dir="rtl"
         />
@@ -357,7 +352,7 @@
                   <span>{therapist ? therapist.name : '-'}</span>
                 </div>
                 <div class="text-gray-600 text-center">
-                  <span>{g.when || 'open'}</span>
+                  <span class="font-medium">{g.when}</span>
                 </div>
                 <div class="text-gray-900 text-center">
                   <span class="font-medium">{g.name}</span>

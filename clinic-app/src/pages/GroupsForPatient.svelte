@@ -17,6 +17,11 @@
   $: enrolledGroups = groupsForPatient.filter(x => x.enrolled === 1)
   $: waitlistedGroups = groupsForPatient.filter(x => x.enrolled === 0)
   
+  // Count active subscriptions
+  $: activeGroupsCount = patientId ? enrolledGroups.filter(pig => 
+    api.hasActiveSubscription(db, patientId, pig.groupId)
+  ).length : 0
+  
   function removeFromGroup(groupId: string) {
     if (!patientId) return
     if (confirm('להסיר מהקבוצה?')) {
@@ -76,18 +81,41 @@
     goto(`/groups/${groupId}`)
   }
   
-  // Get the latest payment period for a patient in a group
+  // Get the ACTIVE payment period for a patient in a group
   function getPaymentPeriod(patientId: string, groupId: string): string | null {
     const payments = db.patientPayments
       .filter(p => p.patientId === patientId && p.groupId === groupId)
-      .sort((a, b) => b.createdAt - a.createdAt)
     
     if (payments.length === 0) return null
     
-    const latest = payments[0]
+    // Get current date for comparison
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1
+    const currentYear = now.getFullYear()
+    const currentDate = currentYear * 12 + currentMonth
+    
+    // Find the active payment that covers current month
+    const activePayment = payments.find(payment => {
+      const [fromMonthStr, fromYearStr] = payment.fromMonth.split('/')
+      const fromMonth = parseInt(fromMonthStr)
+      const fromYear = parseInt(fromYearStr)
+      
+      const [toMonthStr, toYearStr] = payment.toMonth.split('/')
+      const toMonth = parseInt(toMonthStr)
+      const toYear = parseInt(toYearStr)
+      
+      const fromDate = fromYear * 12 + fromMonth
+      const toDate = toYear * 12 + toMonth
+      
+      return fromDate <= currentDate && currentDate <= toDate
+    })
+    
+    // If no active payment, return the most recent one (for historical reference)
+    const paymentToShow = activePayment || payments.sort((a, b) => b.createdAt - a.createdAt)[0]
+    
     // Format: MM/YY-MM/YY for compact display
-    const fromParts = latest.fromMonth.split('/')
-    const toParts = latest.toMonth.split('/')
+    const fromParts = paymentToShow.fromMonth.split('/')
+    const toParts = paymentToShow.toMonth.split('/')
     
     const fromMonth = fromParts[0]
     const fromYear = fromParts[1]?.substring(2) // Last 2 digits of year
@@ -139,7 +167,8 @@
         <div class="text-right">
           <h3 class="text-sm font-medium text-gray-600 mb-2">סטטיסטיקה</h3>
           <div class="space-y-1">
-            <div class="text-lg">קבוצות רשומות: <span class="font-bold text-blue-600">{enrolledGroups.length}</span></div>
+            <div class="text-lg">קבוצות פעילות: <span class="font-bold text-green-600">{activeGroupsCount}</span></div>
+            <div class="text-lg">סה"כ קבוצות: <span class="font-bold text-blue-600">{enrolledGroups.length}</span></div>
             <div class="text-lg">ממתין בקבוצות: <span class="font-bold text-orange-600">{waitlistedGroups.length}</span></div>
           </div>
         </div>
@@ -159,8 +188,9 @@
             {@const therapistInGroup = db.therapistsInGroups.find(x => x.groupId === pig.groupId)}
             {@const therapist = therapistInGroup ? db.therapists.find(t => t.id === therapistInGroup.therapistId) : null}
             {@const paymentPeriod = patientId ? getPaymentPeriod(patientId, pig.groupId) : null}
+            {@const hasActiveSubscription = patientId ? api.hasActiveSubscription(db, patientId, pig.groupId) : false}
             {#if group}
-              <div class="border rounded p-3 hover:bg-gray-50">
+              <div class="border rounded p-3 hover:bg-gray-50 {!hasActiveSubscription ? 'opacity-60' : ''}">
                 <div class="flex items-center justify-between">
                   <div class="flex gap-2">
                     <button 
@@ -184,11 +214,18 @@
                   </div>
                   
                   <div class="flex-1 text-right">
-                    <div class="font-medium text-lg">{group.name}</div>
+                    <div class="flex items-center gap-2 justify-end">
+                      <div class="font-medium text-lg">{group.name}</div>
+                      {#if hasActiveSubscription}
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">פעיל</span>
+                      {:else}
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">לא פעיל</span>
+                      {/if}
+                    </div>
                     <div class="flex gap-4 text-sm text-gray-600 justify-end">
                       <span>קבלה: {pig.receipt || '-'}</span>
                       {#if paymentPeriod}
-                        <span class="font-medium text-green-700">תקופה: {paymentPeriod}</span>
+                        <span class="font-medium {hasActiveSubscription ? 'text-green-700' : 'text-gray-500'}">תקופה: {paymentPeriod}</span>
                       {/if}
                       <span>מנחה: {therapist?.name || '-'}</span>
                       <span>מתי: {group.when || 'open'}</span>
