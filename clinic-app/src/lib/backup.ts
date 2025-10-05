@@ -1,7 +1,49 @@
-import { load, save, type Db } from './db'
+import type { Db } from './db'
+
+/**
+ * Validate database structure
+ */
+export function validateDb(db: any): boolean {
+  if (!db) return false
+  
+  // Check required top-level fields
+  const requiredFields = [
+    'statuses', 'therapists', 'patients', 'groups',
+    'patientsInGroups', 'therapistsInGroups', 'attendance', 'patientPayments'
+  ]
+  
+  for (const field of requiredFields) {
+    if (!Array.isArray(db[field])) {
+      console.error(`Missing or invalid field: ${field}`)
+      return false
+    }
+  }
+  
+  // Validate statuses exist
+  if (db.statuses.length < 2) {
+    console.error('Database must have at least 2 statuses (active/inactive)')
+    return false
+  }
+  
+  // Validate patient structure
+  for (const patient of db.patients) {
+    if (!patient.id || !patient.firstName || !patient.lastName) {
+      console.error('Invalid patient structure:', patient)
+      return false
+    }
+  }
+  
+  return true
+}
 
 export async function exportBackup(): Promise<void> {
-  const db = load()
+  // Get database directly from localStorage to avoid circular dependency
+  const dbStr = localStorage.getItem('phizio-db-v1')
+  if (!dbStr) {
+    alert('אין נתונים לגיבוי')
+    return
+  }
+  const db = JSON.parse(dbStr)
   const timestamp = new Date().toISOString().slice(0, 10)
   const filename = `physio-groups-${timestamp}.json`
   
@@ -20,7 +62,7 @@ export async function exportBackup(): Promise<void> {
       await writable.write(JSON.stringify(db, null, 2))
       await writable.close()
       
-      alert('נתונים נשמרו בהצלחה! המיקום יישמר לפעם הבאה.')
+      alert('שמור')
       return
     } catch (err: any) {
       if (err.name === 'AbortError') return // User cancelled
@@ -37,27 +79,25 @@ export async function exportBackup(): Promise<void> {
   link.click()
   URL.revokeObjectURL(url)
   
-  alert(`קובץ הורד לתיקיית Downloads. אנא העבר למיקום הגיבוי הרצוי`)
+  alert('שמור')
 }
 
 export function importBackup(jsonString: string): boolean {
   try {
+    // Parse to validate it's valid JSON
     const data = JSON.parse(jsonString)
     
-    // Validate data structure
-    if (data.therapists && data.patients && data.groups && data.statuses) {
-      // Additional validation
-      if (Array.isArray(data.therapists) && 
-          Array.isArray(data.patients) && 
-          Array.isArray(data.groups) &&
-          Array.isArray(data.statuses)) {
-        
-        localStorage.setItem('phizio-db-v1', jsonString)
-        return true
-      }
+    // Basic validation - just ensure it has the expected structure
+    if (!data.statuses || !data.therapists || !data.patients || !data.groups) {
+      return false
     }
-    return false
-  } catch {
+    
+    // Store exactly what was in the backup - no modifications
+    localStorage.setItem('phizio-db-v1', jsonString)
+    
+    return true
+  } catch (error) {
+    console.error('Import backup error:', error)
     return false
   }
 }
