@@ -27,6 +27,7 @@
   let paymentMethod: 'ק' | 'א' | 'ת' | 'מ' = 'ק'
   let receiptNumber = ''
   let paymentDate = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+  let paymentSaved = false // Track if payment was just saved
   
   // Get selected group details - dbVersion forces recalculation
   $: selectedGroup = selectedGroupId && dbVersion >= 0 ? db.groups.find(g => g.id === selectedGroupId) : null
@@ -160,10 +161,18 @@
       alert('התשלום נרשם בהצלחה')
     }
     
-    // Reset form
+    // Mark payment as saved to hide the button
+    paymentSaved = true
+    
+    // Reset form and redirect after a short delay
     amount = 0
     receiptNumber = ''
     paymentDate = new Date().toISOString().split('T')[0]
+    
+    // Redirect to history page to show the payment that was just recorded
+    setTimeout(() => {
+      goto(`/history/${patientId}`)
+    }, 1500)
   }
   
   // Determine where to navigate back to
@@ -332,18 +341,26 @@
         />
       </div>
 
-      <!-- Save button -->
-      <div class="flex justify-center pt-4 border-t">
-        <button 
-          class="big-green-button"
-          on:click={savePayment}
-        >
-        {selectedGroupAvailable > 0 ? 
-          (patientAlreadyInGroup && patientAlreadyInGroup.enrolled === 1 ? 'שמור תשלום' : 'שמור תשלום והרשמה') : 
-          'הכנס לרשימת המתנה'
-        }
-        </button>
-      </div>
+      <!-- Save button - hide after payment is saved -->
+      {#if !paymentSaved}
+        <div class="flex justify-center pt-4 border-t">
+          <button 
+            class="big-green-button"
+            on:click={savePayment}
+          >
+          {selectedGroupAvailable > 0 ? 
+            (patientAlreadyInGroup && patientAlreadyInGroup.enrolled === 1 ? 'שמור תשלום' : 'שמור תשלום והרשמה') : 
+            'הכנס לרשימת המתנה'
+          }
+          </button>
+        </div>
+      {:else}
+        <div class="flex justify-center pt-4 border-t">
+          <div class="text-green-600 font-medium">
+            ✓ התשלום נרשם בהצלחה - מעבר להיסטוריית תשלומים...
+          </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </section>

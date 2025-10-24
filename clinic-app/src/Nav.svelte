@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from './router'
+  import { exportBackupCSV, importBackupCSV } from './lib/csvBackup'
   import { exportBackup, importBackup } from './lib/backup'
   import logo from './assets/logo-clalit.svg'
   
@@ -12,11 +13,26 @@
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
-        if (importBackup(content)) {
-          alert('נתונים נטענו בהצלחה!')
-          location.reload() // Refresh to show imported data
+        
+        // Try CSV format first (new format)
+        if (file.name.endsWith('.csv')) {
+          if (importBackupCSV(content)) {
+            alert('נתונים נטענו בהצלחה!')
+            location.reload() // Refresh to show imported data
+          } else {
+            alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
+          }
+        } 
+        // Fallback to JSON format for backwards compatibility
+        else if (file.name.endsWith('.json')) {
+          if (importBackup(content)) {
+            alert('נתונים נטענו בהצלחה!')
+            location.reload() // Refresh to show imported data
+          } else {
+            alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
+          }
         } else {
-          alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
+          alert('פורמט קובץ לא נתמך. נא להעלות קובץ CSV או JSON.')
         }
       }
       reader.readAsText(file)
@@ -93,7 +109,7 @@
         
         <button 
           class="px-4 text-sm text-green-600 hover:text-green-700 hover:bg-white py-3 font-medium transition-colors" 
-          on:click={exportBackup}
+          on:click={exportBackupCSV}
         >
           שמירה
         </button>
@@ -112,7 +128,7 @@
   <!-- Hidden file input for import -->
   <input 
     type="file" 
-    accept=".json" 
+    accept=".csv,.json" 
     bind:this={fileInput} 
     on:change={handleImport} 
     class="hidden"
