@@ -3,59 +3,41 @@ function uid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().
 export function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
-        try {
-            const parsed = JSON.parse(raw);
-            // Handle migration: add attendance array if missing
-            if (!parsed.attendance) {
-                parsed.attendance = [];
-            }
-            // Handle migration: add patientPayments array if missing
-            if (!parsed.patientPayments) {
-                parsed.patientPayments = [];
-            }
-            // Handle migration: add enrolled field to existing patientsInGroups
-            if (parsed.patientsInGroups) {
-                parsed.patientsInGroups = parsed.patientsInGroups.map((pig) => {
-                    if (pig.enrolled === undefined) {
-                        return { ...pig, enrolled: 1 }; // Assume existing patients are enrolled
-                    }
-                    return pig;
-                });
-            }
-            // Handle migration: add isMakeup field to existing attendance records
-            if (parsed.attendance) {
-                parsed.attendance = parsed.attendance.map((att) => {
-                    if (att.isMakeup === undefined) {
-                        return { ...att, isMakeup: false }; // Assume existing attendance is not makeup
-                    }
-                    return att;
-                });
-            }
-            // Recalculate available spots for all groups to ensure consistency
-            if (parsed.groups && parsed.patientsInGroups) {
-                parsed.groups.forEach((group) => {
-                    const enrolledCount = parsed.patientsInGroups.filter((x) => x.groupId === group.id && x.enrolled === 1).length;
-                    group.available = group.capacity - enrolledCount;
-                });
-            }
-            return parsed;
+        const parsed = JSON.parse(raw);
+        // Handle migration: add attendance array if missing
+        if (!parsed.attendance) {
+            parsed.attendance = [];
         }
-        catch (e) {
-            console.error('Failed to parse database, checking for auto-backup:', e);
-            // Try to restore from auto-backup
-            const autoBackupStr = localStorage.getItem('phizio-auto-backup');
-            if (autoBackupStr) {
-                try {
-                    const backup = JSON.parse(autoBackupStr);
-                    console.log('Restoring from auto-backup created at:', backup.timestamp);
-                    localStorage.setItem(KEY, JSON.stringify(backup.data));
-                    return backup.data;
-                }
-                catch (backupError) {
-                    console.error('Auto-backup also failed:', backupError);
-                }
-            }
+        // Handle migration: add patientPayments array if missing
+        if (!parsed.patientPayments) {
+            parsed.patientPayments = [];
         }
+        // Handle migration: add enrolled field to existing patientsInGroups
+        if (parsed.patientsInGroups) {
+            parsed.patientsInGroups = parsed.patientsInGroups.map((pig) => {
+                if (pig.enrolled === undefined) {
+                    return { ...pig, enrolled: 1 }; // Assume existing patients are enrolled
+                }
+                return pig;
+            });
+        }
+        // Handle migration: add isMakeup field to existing attendance records
+        if (parsed.attendance) {
+            parsed.attendance = parsed.attendance.map((att) => {
+                if (att.isMakeup === undefined) {
+                    return { ...att, isMakeup: false }; // Assume existing attendance is not makeup
+                }
+                return att;
+            });
+        }
+        // Recalculate available spots for all groups to ensure consistency
+        if (parsed.groups && parsed.patientsInGroups) {
+            parsed.groups.forEach((group) => {
+                const enrolledCount = parsed.patientsInGroups.filter((x) => x.groupId === group.id && x.enrolled === 1).length;
+                group.available = group.capacity - enrolledCount;
+            });
+        }
+        return parsed;
     }
     // seed
     const now = Date.now();
@@ -75,20 +57,6 @@ export function load() {
     return seed;
 }
 export function save(db) {
-    // Create auto-backup before saving
-    const currentData = localStorage.getItem(KEY);
-    if (currentData) {
-        try {
-            localStorage.setItem('phizio-auto-backup', JSON.stringify({
-                timestamp: new Date().toISOString(),
-                data: JSON.parse(currentData)
-            }));
-        }
-        catch (e) {
-            console.error('Failed to create auto-backup:', e);
-        }
-    }
-    // Save the new data
     localStorage.setItem(KEY, JSON.stringify(db));
 }
 export function findStatusId(db, code) {

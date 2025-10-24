@@ -1,40 +1,3 @@
-import { load, save } from './db';
-const AUTO_BACKUP_KEY = 'phizio-auto-backup';
-const LAST_BACKUP_TIME_KEY = 'phizio-last-backup-time';
-/**
- * Create an automatic backup in localStorage
- */
-export function createAutoBackup(db) {
-    try {
-        const backup = {
-            timestamp: new Date().toISOString(),
-            data: db
-        };
-        localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(backup));
-        localStorage.setItem(LAST_BACKUP_TIME_KEY, backup.timestamp);
-    }
-    catch (e) {
-        console.error('Failed to create auto backup:', e);
-    }
-}
-/**
- * Restore from auto backup if available
- */
-export function restoreFromAutoBackup() {
-    try {
-        const backupStr = localStorage.getItem(AUTO_BACKUP_KEY);
-        if (!backupStr)
-            return null;
-        const backup = JSON.parse(backupStr);
-        if (validateDb(backup.data)) {
-            return backup.data;
-        }
-    }
-    catch (e) {
-        console.error('Failed to restore from auto backup:', e);
-    }
-    return null;
-}
 /**
  * Validate database structure
  */
@@ -67,7 +30,13 @@ export function validateDb(db) {
     return true;
 }
 export async function exportBackup() {
-    const db = load();
+    // Get database directly from localStorage to avoid circular dependency
+    const dbStr = localStorage.getItem('phizio-db-v1');
+    if (!dbStr) {
+        alert('אין נתונים לגיבוי');
+        return;
+    }
+    const db = JSON.parse(dbStr);
     const timestamp = new Date().toISOString().slice(0, 10);
     const filename = `physio-groups-${timestamp}.json`;
     // Modern browsers with file picker
@@ -83,7 +52,7 @@ export async function exportBackup() {
             const writable = await fileHandle.createWritable();
             await writable.write(JSON.stringify(db, null, 2));
             await writable.close();
-            alert('נתונים נשמרו בהצלחה! המיקום יישמר לפעם הבאה.');
+            alert('שמור');
             return;
         }
         catch (err) {
@@ -100,7 +69,7 @@ export async function exportBackup() {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
-    alert(`קובץ הורד לתיקיית Downloads. אנא העבר למיקום הגיבוי הרצוי`);
+    alert('שמור');
 }
 export function importBackup(jsonString) {
     try {
