@@ -93,9 +93,10 @@
     <div class="bg-white rounded-lg shadow p-4 space-y-4">
       <!-- Group Name -->
       <div class="flex flex-row-reverse items-center gap-3">
-        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">שם קבוצה</label>
+        <label class="text-sm text-gray-600 font-medium whitespace-nowrap" for="group-name">שם קבוצה</label>
         {#if editing}
           <input 
+            id="group-name"
             class="flex-1 border rounded px-3 h-10" 
             style="text-align: right;"
             bind:value={editName} 
@@ -135,9 +136,10 @@
       
       <!-- Group Properties -->
       <div class="flex flex-row-reverse items-center gap-3">
-        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">מתי</label>
+        <label class="text-sm text-gray-600 font-medium whitespace-nowrap" for="when-input">מתי</label>
         {#if editing}
           <input 
+            id="when-input"
             class="w-40 border rounded px-3 h-10" 
             style="text-align: right;" 
             bind:value={editWhen} 
@@ -149,7 +151,7 @@
           </div>
         {/if}
         
-        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">פנוי</label>
+        <span class="text-sm text-gray-600 font-medium whitespace-nowrap">פנוי</span>
         {#if editing}
           <div class="w-20 px-3 py-2 text-center bg-gray-100 rounded">
             <span class="text-gray-600">{editCapacity - enrolledCount}</span>
@@ -160,9 +162,10 @@
           </div>
         {/if}
         
-        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">קיבולת</label>
+        <label class="text-sm text-gray-600 font-medium whitespace-nowrap" for="capacity-input">קיבולת</label>
         {#if editing}
           <input 
+            id="capacity-input"
             class="w-20 border rounded px-3 h-10" 
             style="text-align: right;" 
             type="number" 

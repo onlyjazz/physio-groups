@@ -308,9 +308,3 @@
     {/if}
   </div>
 </section>
-
-<style>
-  table {
-    direction: rtl;
-  }
-</style>

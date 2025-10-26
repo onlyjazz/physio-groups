@@ -211,9 +211,9 @@
     <div class="bg-white rounded-lg shadow p-4 space-y-4">
       <!-- Row 1: Group selection and Period -->
       <div class="flex flex-row-reverse items-center gap-3">
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-        <label class="text-sm text-gray-600 whitespace-nowrap">קבוצה</label>
-        <select 
+        <label class="text-sm text-gray-600 whitespace-nowrap" for="group-select">קבוצה</label>
+        <select
+          id="group-select"
           class="flex-1 border rounded px-3 h-10 {groupIdFromRoute ? 'bg-gray-100' : ''}" 
           style="text-align: right;" 
           dir="rtl"
@@ -233,26 +233,26 @@
             <!-- Elements appear right-to-left, so first element in code appears rightmost -->
             
             <!-- FROM date (מ) - should appear on the RIGHT in Hebrew reading -->
-            <label class="text-xs text-gray-500">:מ</label>
-            <select class="border rounded px-2 h-10" bind:value={fromYear} dir="rtl">
+            <span class="text-xs text-gray-500">:מ</span>
+            <select class="border rounded px-2 h-10" bind:value={fromYear} dir="rtl" aria-label="שנת התחלה">
               {#each years as year}
                 <option value={year}>{year}</option>
               {/each}
             </select>
-            <select class="border rounded px-2 h-10" bind:value={fromMonth} dir="rtl">
+            <select class="border rounded px-2 h-10" bind:value={fromMonth} dir="rtl" aria-label="חודש התחלה">
               {#each months as month}
                 <option value={month.value}>{month.label}</option>
               {/each}
             </select>
             
             <!-- TO date (עד) - should appear on the LEFT in Hebrew reading -->
-            <label class="text-xs text-gray-500">:עד</label>
-            <select class="border rounded px-2 h-10" bind:value={toYear} dir="rtl">
+            <span class="text-xs text-gray-500">:עד</span>
+            <select class="border rounded px-2 h-10" bind:value={toYear} dir="rtl" aria-label="שנת סיום">
               {#each years as year}
                 <option value={year}>{year}</option>
               {/each}
             </select>
-            <select class="border rounded px-2 h-10" bind:value={toMonth} dir="rtl">
+            <select class="border rounded px-2 h-10" bind:value={toMonth} dir="rtl" aria-label="חודש סיום">
               {#each months as month}
                 <option value={month.value}>{month.label}</option>
               {/each}
@@ -296,9 +296,9 @@
 
       <!-- Row 3: Payment details -->
       <div class="flex flex-row-reverse items-center gap-3 {selectedGroupAvailable <= 0 ? 'opacity-50' : ''}" >
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-        <label class="text-sm text-gray-600 whitespace-nowrap">סכום</label>
-        <input 
+        <label class="text-sm text-gray-600 whitespace-nowrap" for="amount-input">סכום</label>
+        <input
+          id="amount-input"
           type="number" 
           class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 100px;"
@@ -307,9 +307,9 @@
           disabled={selectedGroupAvailable <= 0}
         />
         
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-        <label class="text-sm text-gray-600 whitespace-nowrap">אופן תשלום</label>
-        <select 
+        <label class="text-sm text-gray-600 whitespace-nowrap" for="payment-method">אופן תשלום</label>
+        <select
+          id="payment-method"
           class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 100px;"
           bind:value={paymentMethod}
@@ -321,9 +321,9 @@
           <option value="ה">ה - הרשאה</option>
         </select>
         
-        <!-- svelte-ignore a11y_label_has_associated_control -->
-        <label class="text-sm text-gray-600 whitespace-nowrap">מספר קבלה</label>
-        <input 
+        <label class="text-sm text-gray-600 whitespace-nowrap" for="receipt-number">מספר קבלה</label>
+        <input
+          id="receipt-number"
           type="text" 
           class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}" 
           style="text-align: right; width: 150px;"
@@ -332,9 +332,10 @@
           disabled={selectedGroupAvailable <= 0}
         />
         
-        <label class="text-sm text-gray-600 whitespace-nowrap">תאריך תשלום</label>
+        <label class="text-sm text-gray-600 whitespace-nowrap" for="payment-date">תאריך תשלום</label>
         <input 
-          type="date" 
+          id="payment-date"
+          type="date"
           class="border rounded px-3 h-10 {selectedGroupAvailable <= 0 ? 'bg-gray-100' : ''}"
           bind:value={paymentDate}
           disabled={selectedGroupAvailable <= 0}

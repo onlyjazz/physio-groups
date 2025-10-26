@@ -119,7 +119,7 @@
           placeholder="שם פרטי" 
           bind:value={firstName} 
           dir="rtl" 
-          tabindex="1"
+          aria-label="שם פרטי"
         />
         <input 
           class="border rounded px-3 h-10" 
@@ -127,7 +127,7 @@
           placeholder="שם משפחה" 
           bind:value={lastName} 
           dir="rtl" 
-          tabindex="2"
+          aria-label="שם משפחה"
         />
         <input 
           class="border rounded px-3 h-10" 
@@ -135,7 +135,7 @@
           placeholder="ת.ז." 
           bind:value={nationalId} 
           dir="rtl" 
-          tabindex="3"
+          aria-label="תעודת זהות"
         />
         <input 
           class="border rounded px-3 h-10" 
@@ -143,9 +143,9 @@
           placeholder="טלפון" 
           bind:value={phone} 
           dir="rtl" 
-          tabindex="4"
+          aria-label="טלפון"
         />
-        <button class="big-green-button" style="min-width: 90px;" tabindex="5">הוסף/י</button>
+        <button class="big-green-button" style="min-width: 90px;">הוסף/י</button>
       </div>
     </form>
   </div>
@@ -181,7 +181,7 @@
                   bind:value={editingFirstName} 
                   placeholder="שם פרטי" 
                   dir="rtl" 
-                  tabindex="1"
+                  aria-label="עריכת שם פרטי"
                 />
                 <input 
                   class="border rounded px-3 py-1 text-sm" 
@@ -189,7 +189,7 @@
                   bind:value={editingLastName} 
                   placeholder="שם משפחה" 
                   dir="rtl" 
-                  tabindex="2"
+                  aria-label="עריכת שם משפחה"
                 />
                 <input 
                   class="border rounded px-3 py-1 text-sm" 
@@ -197,7 +197,7 @@
                   bind:value={editingNationalId} 
                   placeholder="ת.ז." 
                   dir="rtl" 
-                  tabindex="3"
+                  aria-label="עריכת תעודת זהות"
                 />
                 <input 
                   class="border rounded px-3 py-1 text-sm" 
@@ -205,7 +205,7 @@
                   bind:value={editingPhone} 
                   placeholder="טלפון" 
                   dir="rtl" 
-                  tabindex="4"
+                  aria-label="עריכת טלפון"
                 />
               </div>
             {:else}

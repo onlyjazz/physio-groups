@@ -210,6 +210,7 @@
                     class="text-red-600 hover:text-red-700 p-1"
                     on:click={() => deleteAttendance(record.id, record.groupId, record.date)}
                     title="מחק"
+                    aria-label="מחק רישום נוכחות"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -219,6 +220,7 @@
                     class="text-blue-600 hover:text-blue-700 p-1"
                     on:click={() => goToGroup(record.groupId)}
                     title="פרטי קבוצה"
+                    aria-label="פרטי קבוצה"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -254,6 +256,7 @@
                     class="text-red-600 hover:text-red-700 p-1"
                     on:click={() => deleteAttendance(record.id, record.groupId, record.date)}
                     title="מחק"
+                    aria-label="מחק רישום נוכחות"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -263,6 +266,7 @@
                     class="text-blue-600 hover:text-blue-700 p-1"
                     on:click={() => goToGroup(record.groupId)}
                     title="פרטי קבוצה"
+                    aria-label="פרטי קבוצה"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
