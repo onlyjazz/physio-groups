@@ -6,12 +6,66 @@
   
   let db: Db = load()
   
+  // Sorting state
+  let sortField: 'group' | 'period' | 'paymentDate' | 'amount' | 'paymentMethod' | 'receiptNumber' | null = null
+  let sortDirection: 'asc' | 'desc' = 'asc'
+  
   // Get patient ID from route
   $: patientId = $route.segments[0] || null
   $: patient = patientId ? db.patients.find(p => p.id === patientId) : null
   
   // Get patient payments
-  $: payments = patientId ? api.getPaymentsByPatient(db, patientId) : []
+  $: rawPayments = patientId ? api.getPaymentsByPatient(db, patientId) : []
+  
+  // Sorting function
+  function sortBy(field: 'group' | 'period' | 'paymentDate' | 'amount' | 'paymentMethod' | 'receiptNumber') {
+    if (sortField === field) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortField = field
+      sortDirection = 'asc'
+    }
+  }
+  
+  // Get sorted payments
+  $: payments = (() => {
+    const sorted = [...rawPayments]
+    
+    if (!sortField) return sorted
+    
+    return sorted.sort((a, b) => {
+      let compareValue = 0
+      
+      if (sortField === 'group') {
+        const groupA = db.groups.find(g => g.id === a.groupId)?.name || ''
+        const groupB = db.groups.find(g => g.id === b.groupId)?.name || ''
+        compareValue = groupA.localeCompare(groupB, 'he')
+      } else if (sortField === 'period') {
+        // Sort by fromMonth first, then toMonth
+        const fromA = a.fromMonth.split('/').reverse().join('')
+        const fromB = b.fromMonth.split('/').reverse().join('')
+        compareValue = fromA.localeCompare(fromB)
+        if (compareValue === 0) {
+          const toA = a.toMonth.split('/').reverse().join('')
+          const toB = b.toMonth.split('/').reverse().join('')
+          compareValue = toA.localeCompare(toB)
+        }
+      } else if (sortField === 'paymentDate') {
+        // Convert DD/MM/YYYY to sortable format
+        const dateA = a.paymentDate.split('/').reverse().join('')
+        const dateB = b.paymentDate.split('/').reverse().join('')
+        compareValue = dateA.localeCompare(dateB)
+      } else if (sortField === 'amount') {
+        compareValue = a.amount - b.amount
+      } else if (sortField === 'paymentMethod') {
+        compareValue = a.paymentMethod.localeCompare(b.paymentMethod, 'he')
+      } else if (sortField === 'receiptNumber') {
+        compareValue = a.receiptNumber.localeCompare(b.receiptNumber)
+      }
+      
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+  })()
   
   // Get payment method label
   function getPaymentMethodLabel(method: string): string {
@@ -118,12 +172,42 @@
         <div class="space-y-3">
           <!-- Header -->
           <div class="grid grid-cols-6 gap-2 pb-2 border-b font-semibold text-sm text-gray-700 text-right">
-            <div>קבוצה</div>
-            <div>תקופה</div>
-            <div>תאריך תשלום</div>
-            <div>סכום</div>
-            <div>אופן תשלום</div>
-            <div>מספר קבלה</div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('group')}>
+              קבוצה
+              {#if sortField === 'group'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('period')}>
+              תקופה
+              {#if sortField === 'period'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('paymentDate')}>
+              תאריך תשלום
+              {#if sortField === 'paymentDate'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('amount')}>
+              סכום
+              {#if sortField === 'amount'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('paymentMethod')}>
+              אופן תשלום
+              {#if sortField === 'paymentMethod'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('receiptNumber')}>
+              מספר קבלה
+              {#if sortField === 'receiptNumber'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
           </div>
           
           <!-- Payment rows -->

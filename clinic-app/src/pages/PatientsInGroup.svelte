@@ -6,6 +6,10 @@
   
   let db: Db = load()
   
+  // Sorting state
+  let sortField: 'name' | 'nationalId' | 'phone' | 'period' | 'receipt' | null = null
+  let sortDirection: 'asc' | 'desc' = 'asc'
+  
   // Get group ID from route
   $: groupId = $route.segments[0] || null
   $: group = groupId ? db.groups.find(g => g.id === groupId) : null
@@ -14,7 +18,51 @@
   $: patientsInGroup = groupId ? db.patientsInGroups.filter(x => x.groupId === groupId) : []
   
   // Get enrolled patients with active subscriptions only
-  $: activeEnrolledPatients = groupId ? api.getPatientsWithActiveSubscriptions(db, groupId) : []
+  $: activeEnrolledPatientsUnsorted = groupId ? api.getPatientsWithActiveSubscriptions(db, groupId) : []
+  
+  // Sorting function
+  function sortBy(field: 'name' | 'nationalId' | 'phone' | 'period' | 'receipt') {
+    if (sortField === field) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    } else {
+      sortField = field
+      sortDirection = 'asc'
+    }
+  }
+  
+  // Sort active enrolled patients
+  $: activeEnrolledPatients = (() => {
+    const sorted = [...activeEnrolledPatientsUnsorted]
+    
+    if (!sortField) return sorted
+    
+    return sorted.sort((a, b) => {
+      const patientA = db.patients.find(p => p.id === a.patientId)
+      const patientB = db.patients.find(p => p.id === b.patientId)
+      
+      if (!patientA || !patientB) return 0
+      
+      let compareValue = 0
+      
+      if (sortField === 'name') {
+        const fullNameA = `${patientA.firstName || ''} ${patientA.lastName || ''}`
+        const fullNameB = `${patientB.firstName || ''} ${patientB.lastName || ''}`
+        compareValue = fullNameA.localeCompare(fullNameB, 'he')
+      } else if (sortField === 'nationalId') {
+        compareValue = (patientA.nationalId || '').localeCompare(patientB.nationalId || '')
+      } else if (sortField === 'phone') {
+        compareValue = (patientA.phone || '').localeCompare(patientB.phone || '')
+      } else if (sortField === 'period') {
+        const periodA = getPaymentPeriod(patientA.id, groupId || '') || ''
+        const periodB = getPaymentPeriod(patientB.id, groupId || '') || ''
+        compareValue = periodA.localeCompare(periodB)
+      } else if (sortField === 'receipt') {
+        compareValue = (a.receipt || '').localeCompare(b.receipt || '')
+      }
+      
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+  })()
   
   // Get all enrolled patients (for showing inactive ones separately if needed)
   $: allEnrolledPatients = patientsInGroup.filter(x => x.enrolled === 1)
@@ -197,11 +245,36 @@
             <!-- Empty space for action buttons -->
           </div>
           <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 130px 100px;">
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">שם</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">ת.ז.</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">טלפון</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">תקופה</div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2">קבלה</div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('name')}>
+              שם
+              {#if sortField === 'name'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('nationalId')}>
+              ת.ז.
+              {#if sortField === 'nationalId'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('phone')}>
+              טלפון
+              {#if sortField === 'phone'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('period')}>
+              תקופה
+              {#if sortField === 'period'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
+            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('receipt')}>
+              קבלה
+              {#if sortField === 'receipt'}
+                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+              {/if}
+            </div>
           </div>
         </div>
         

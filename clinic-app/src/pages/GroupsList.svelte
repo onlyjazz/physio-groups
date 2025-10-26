@@ -177,17 +177,29 @@
     })
     exportToCSV(exportData, 'groups')
   }
+  
+  function navigateToImport() {
+    goto('excelImport')
+  }
 </script>
 
 <section class="space-y-6">
   <div class="bg-white rounded-lg shadow p-4">
     <div class="flex justify-between items-center mb-4">
-      <button 
-        class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-        on:click={exportGroups}
-      >
-        ייצוא
-      </button>
+      <div class="flex gap-2">
+        <button 
+          class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          on:click={exportGroups}
+        >
+          ייצוא
+        </button>
+        <button 
+          class="text-green-600 hover:text-green-700 text-sm font-medium"
+          on:click={navigateToImport}
+        >
+          ייבוא מאקסל
+        </button>
+      </div>
       <h2 class="text-lg font-semibold">קבוצות</h2>
     </div>
     

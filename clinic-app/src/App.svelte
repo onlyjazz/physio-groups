@@ -13,7 +13,8 @@
   import PatientsInGroup from './pages/PatientsInGroup.svelte'
   import GroupsForPatient from './pages/GroupsForPatient.svelte'
   import PatientAttendance from './pages/PatientAttendance.svelte'
-  import Indicators from './pages/Indicators.svelte'
+import Indicators from './pages/Indicators.svelte'
+import ExcelImport from './pages/ExcelImport.svelte'
 
   const routes: Record<string, any> = {
     therapists: Therapists,
@@ -28,7 +29,8 @@
     patientsInGroup: PatientsInGroup,
     groupsForPatient: GroupsForPatient,
     patientAttendance: PatientAttendance,
-    indicators: Indicators
+    indicators: Indicators,
+    excelImport: ExcelImport
   }
 
   $: current = $route
