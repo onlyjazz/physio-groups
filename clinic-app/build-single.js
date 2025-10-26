@@ -10,7 +10,7 @@ const htmlPath = path.join(__dirname, 'dist', 'index.html');
 let html = fs.readFileSync(htmlPath, 'utf-8');
 
 // Find and inline CSS files
-const cssRegex = /<link rel="stylesheet" crossorigin href="(.*?)"/g;
+const cssRegex = /<link rel="stylesheet" crossorigin href="(.*?)">/g;
 let cssMatch;
 while ((cssMatch = cssRegex.exec(html)) !== null) {
   const cssPath = path.join(__dirname, 'dist', cssMatch[1].replace(/^\//, ''));
@@ -18,7 +18,7 @@ while ((cssMatch = cssRegex.exec(html)) !== null) {
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
     html = html.replace(
       cssMatch[0],
-      `<style rel="stylesheet" crossorigin>${cssContent}</style>`
+      `<style>${cssContent}</style>`
     );
   }
 }
@@ -32,7 +32,7 @@ while ((jsMatch = jsRegex.exec(html)) !== null) {
     const jsContent = fs.readFileSync(jsPath, 'utf-8');
     html = html.replace(
       jsMatch[0],
-      `<script type="module" crossorigin>${jsContent}</script>`
+      `<script type="module">${jsContent}</script>`
     );
   }
 }
