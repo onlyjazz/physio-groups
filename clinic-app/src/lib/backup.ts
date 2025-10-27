@@ -44,8 +44,7 @@ export async function exportBackup(): Promise<void> {
     return
   }
   const db = JSON.parse(dbStr)
-  const timestamp = new Date().toISOString().slice(0, 10)
-  const filename = `physio-groups-${timestamp}.json`
+  const filename = 'groupsdata.json'
   
   // Modern browsers with file picker
   if ('showSaveFilePicker' in window) {
