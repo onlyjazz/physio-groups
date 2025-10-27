@@ -111,8 +111,7 @@ export async function exportBackupCSV() {
         return;
     }
     const db = JSON.parse(dbStr);
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `physio-groups-${timestamp}.csv`;
+    const filename = 'groupsdata.csv';
     // Create CSV content for each table
     const csvSections = [];
     // Add metadata
