@@ -245,36 +245,56 @@
             <!-- Empty space for action buttons -->
           </div>
           <div class="flex-1 grid" style="grid-template-columns: 3fr 120px 140px 130px 100px;">
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('name')}>
+            <button 
+              class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('name')}
+              aria-label="מיין לפי שם"
+            >
               שם
               {#if sortField === 'name'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('nationalId')}>
+            </button>
+            <button 
+              class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('nationalId')}
+              aria-label="מיין לפי תעודת זהות"
+            >
               ת.ז.
               {#if sortField === 'nationalId'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('phone')}>
+            </button>
+            <button 
+              class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('phone')}
+              aria-label="מיין לפי טלפון"
+            >
               טלפון
               {#if sortField === 'phone'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('period')}>
+            </button>
+            <button 
+              class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('period')}
+              aria-label="מיין לפי תקופה"
+            >
               תקופה
               {#if sortField === 'period'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600" on:click={() => sortBy('receipt')}>
+            </button>
+            <button 
+              class="text-gray-700 text-right font-semibold text-sm py-1 px-2 cursor-pointer hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('receipt')}
+              aria-label="מיין לפי קבלה"
+            >
               קבלה
               {#if sortField === 'receipt'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
+            </button>
           </div>
         </div>
         

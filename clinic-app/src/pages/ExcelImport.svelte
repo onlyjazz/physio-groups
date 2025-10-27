@@ -1,6 +1,6 @@
 <script lang="ts">
   import { load, type Db } from '../lib/db'
-  import { importExcelFile } from '../lib/excelImport'
+  import { importExcelFileWrapper, isImportSupported } from '../lib/importWrapper'
   import { goto } from '../router'
   
   let db: Db = load()
@@ -27,7 +27,7 @@
     importResult = null
     
     try {
-      const result = await importExcelFile(selectedFile, db)
+      const result = await importExcelFileWrapper(selectedFile, db)
       importResult = result
       
       if (result.success) {
@@ -83,10 +83,11 @@
       
       <!-- File input -->
       <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700">
+        <label for="excel-file-input" class="block text-sm font-medium text-gray-700">
           בחר קובץ Excel:
         </label>
         <input
+          id="excel-file-input"
           bind:this={fileInput}
           type="file"
           accept=".xlsx,.xls"

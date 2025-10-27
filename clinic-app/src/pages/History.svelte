@@ -172,42 +172,66 @@
         <div class="space-y-3">
           <!-- Header -->
           <div class="grid grid-cols-6 gap-2 pb-2 border-b font-semibold text-sm text-gray-700 text-right">
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('group')}>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('group')}
+              aria-label="מיין לפי קבוצה"
+            >
               קבוצה
               {#if sortField === 'group'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('period')}>
+            </button>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('period')}
+              aria-label="מיין לפי תקופה"
+            >
               תקופה
               {#if sortField === 'period'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('paymentDate')}>
+            </button>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('paymentDate')}
+              aria-label="מיין לפי תאריך תשלום"
+            >
               תאריך תשלום
               {#if sortField === 'paymentDate'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('amount')}>
+            </button>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('amount')}
+              aria-label="מיין לפי סכום"
+            >
               סכום
               {#if sortField === 'amount'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('paymentMethod')}>
+            </button>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('paymentMethod')}
+              aria-label="מיין לפי אופן תשלום"
+            >
               אופן תשלום
               {#if sortField === 'paymentMethod'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
-            <div class="cursor-pointer hover:text-blue-600" on:click={() => sortBy('receiptNumber')}>
+            </button>
+            <button 
+              class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
+              on:click={() => sortBy('receiptNumber')}
+              aria-label="מיין לפי מספר קבלה"
+            >
               מספר קבלה
               {#if sortField === 'receiptNumber'}
-                <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
-            </div>
+            </button>
           </div>
           
           <!-- Payment rows -->

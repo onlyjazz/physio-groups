@@ -181,6 +181,18 @@
   function navigateToImport() {
     goto('excelImport')
   }
+  
+  // Check if import is available (will fail in single-file build)
+  let showImport = false
+  if (typeof window !== 'undefined') {
+    // Check if we can dynamically import modules
+    try {
+      // This will fail in single-file builds
+      showImport = !!(window as any).require || typeof import.meta !== 'undefined'
+    } catch {
+      showImport = false
+    }
+  }
 </script>
 
 <section class="space-y-6">
@@ -193,12 +205,14 @@
         >
           ייצוא
         </button>
-        <button 
-          class="text-green-600 hover:text-green-700 text-sm font-medium"
-          on:click={navigateToImport}
-        >
-          ייבוא מאקסל
-        </button>
+        {#if showImport}
+          <button 
+            class="text-green-600 hover:text-green-700 text-sm font-medium"
+            on:click={navigateToImport}
+          >
+            ייבוא מאקסל
+          </button>
+        {/if}
       </div>
       <h2 class="text-lg font-semibold">קבוצות</h2>
     </div>
