@@ -1,10 +1,14 @@
 <script lang="ts">
-  import { load, api, type Db } from '../lib/db'
+  import { load, api, type Db, type PatientPayment } from '../lib/db'
   import { route } from '../router'
   import { goto } from '../router'
   import { exportToCSV } from '../lib/csvExport'
   
   let db: Db = load()
+  
+  // Edit mode state
+  let editingPaymentId: string | null = null
+  let editingPayment: Partial<PatientPayment> = {}
   
   // Sorting state
   let sortField: 'group' | 'period' | 'paymentDate' | 'amount' | 'paymentMethod' | 'receiptNumber' | null = null
@@ -82,6 +86,38 @@
     if (confirm('האם למחוק את הרשומה?')) {
       api.deletePayment(db, paymentId)
       db = load()
+    }
+  }
+  
+  function startEdit(payment: PatientPayment) {
+    editingPaymentId = payment.id
+    editingPayment = { ...payment }
+  }
+  
+  function cancelEdit() {
+    editingPaymentId = null
+    editingPayment = {}
+  }
+  
+  function saveEdit() {
+    if (!editingPaymentId || !editingPayment) return
+    
+    // Find and update the payment
+    const paymentIndex = db.patientPayments.findIndex(p => p.id === editingPaymentId)
+    if (paymentIndex !== -1) {
+      db.patientPayments[paymentIndex] = {
+        ...db.patientPayments[paymentIndex],
+        ...editingPayment,
+        updatedAt: new Date().toISOString()
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('phizio-db-v1', JSON.stringify(db))
+      db = load()
+      
+      // Reset edit state
+      editingPaymentId = null
+      editingPayment = {}
     }
   }
   
@@ -171,7 +207,7 @@
       {:else}
         <div class="space-y-3">
           <!-- Header -->
-          <div class="grid grid-cols-6 gap-2 pb-2 border-b font-semibold text-sm text-gray-700 text-right">
+          <div class="grid grid-cols-7 gap-2 pb-2 border-b font-semibold text-sm text-gray-700 text-right">
             <button 
               class="cursor-pointer hover:text-blue-600 text-right w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded" 
               on:click={() => sortBy('group')}
@@ -232,19 +268,111 @@
                 <span class="text-xs" aria-hidden="true">{sortDirection === 'asc' ? '▲' : '▼'}</span>
               {/if}
             </button>
+            <div class="text-center">פעולות</div>
           </div>
           
           <!-- Payment rows -->
           {#each payments as payment}
             {@const group = db.groups.find(g => g.id === payment.groupId)}
-            <div class="grid grid-cols-6 gap-2 py-2 border-b text-sm text-right">
-              <div class="font-medium">{group?.name || '-'}</div>
-              <div>{payment.fromMonth} - {payment.toMonth}</div>
-              <div>{payment.paymentDate}</div>
-              <div class="font-medium">₪{payment.amount}</div>
-              <div>{getPaymentMethodLabel(payment.paymentMethod)}</div>
-              <div>{payment.receiptNumber}</div>
-            </div>
+            {#if editingPaymentId === payment.id}
+              <!-- Edit mode -->
+              <div class="grid grid-cols-7 gap-2 py-2 border-b text-sm text-right bg-blue-50">
+                <select 
+                  class="border rounded px-2 py-1 text-sm"
+                  bind:value={editingPayment.groupId}
+                  dir="rtl"
+                >
+                  {#each db.groups as g}
+                    <option value={g.id}>{g.name}</option>
+                  {/each}
+                </select>
+                <div class="flex gap-1">
+                  <input 
+                    type="text" 
+                    class="border rounded px-1 py-1 w-16 text-sm text-center"
+                    bind:value={editingPayment.fromMonth}
+                    placeholder="MM/YYYY"
+                  />
+                  <span>-</span>
+                  <input 
+                    type="text" 
+                    class="border rounded px-1 py-1 w-16 text-sm text-center"
+                    bind:value={editingPayment.toMonth}
+                    placeholder="MM/YYYY"
+                  />
+                </div>
+                <input 
+                  type="text" 
+                  class="border rounded px-2 py-1 text-sm text-center"
+                  bind:value={editingPayment.paymentDate}
+                  placeholder="DD/MM/YYYY"
+                />
+                <input 
+                  type="number" 
+                  class="border rounded px-2 py-1 text-sm text-right"
+                  bind:value={editingPayment.amount}
+                  min="0"
+                  step="10"
+                />
+                <select 
+                  class="border rounded px-2 py-1 text-sm"
+                  bind:value={editingPayment.paymentMethod}
+                  dir="rtl"
+                >
+                  <option value="ק">המחאה</option>
+                  <option value="א">אשראי</option>
+                  <option value="ת">מזומן</option>
+                  <option value="מ">העברה</option>
+                </select>
+                <input 
+                  type="text" 
+                  class="border rounded px-2 py-1 text-sm"
+                  bind:value={editingPayment.receiptNumber}
+                />
+                <div class="flex justify-center gap-2">
+                  <button 
+                    class="text-green-600 hover:text-green-700" 
+                    on:click={saveEdit}
+                    title="שמור"
+                  >
+                    ✓
+                  </button>
+                  <button 
+                    class="text-red-600 hover:text-red-700" 
+                    on:click={cancelEdit}
+                    title="ביטול"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <!-- Display mode -->
+              <div class="grid grid-cols-7 gap-2 py-2 border-b text-sm text-right">
+                <div class="font-medium">{group?.name || '-'}</div>
+                <div>{payment.fromMonth} - {payment.toMonth}</div>
+                <div>{payment.paymentDate}</div>
+                <div class="font-medium">₪{payment.amount}</div>
+                <div>{getPaymentMethodLabel(payment.paymentMethod)}</div>
+                <div>{payment.receiptNumber}</div>
+                <div class="flex justify-center gap-2">
+                  <button 
+                    class="text-blue-600 hover:text-blue-700" 
+                    on:click={() => startEdit(payment)}
+                    title="עריכה"
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    class="text-red-600 hover:text-red-700" 
+                    on:click={() => deletePayment(payment.id)}
+                    title="מחיקה"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            {/if}
           {/each}
           
           <!-- Summary -->
