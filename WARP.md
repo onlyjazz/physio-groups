@@ -20,21 +20,14 @@ This starts the Vite development server with hot module replacement on http://lo
 cd clinic-app
 npm run build
 ```
-Builds the application for production using Vite.
+Builds the application for production using Vite with the standard configuration (vite.config.ts).
 
 ### Single-File Build
 ```bash
 cd clinic-app
-npm run build:single
+npx vite build --config vite.config.js
 ```
-Creates a single HTML file (`dist/index-single.html`) with all assets inlined - useful for distribution as a standalone file.
-
-### Type Checking
-```bash
-cd clinic-app
-npm run check
-```
-Runs svelte-check and TypeScript compiler to validate types across the application and build configuration.
+Creates a single HTML file (`dist/index.html`) with all assets inlined - useful for distribution as a standalone file. Uses the vite-plugin-singlefile plugin.
 
 ### Preview Production Build
 ```bash
@@ -43,16 +36,26 @@ npm run preview
 ```
 Serves the production build locally for testing.
 
-## Architecture Overview
+### Testing
+```bash
+cd clinic-app
+node test-waitlist.js  # Test waitlist functionality in browser console
+```
+Note: No automated test runner is configured. Tests should be run manually in the browser console.
 
-### Application Structure
-The application follows a simple SPA architecture with hash-based routing:
+### Database Management
+```bash
+cd clinic-app
+node restore-db.js  # Restore database from backup
+node debug-patient.js  # Debug patient data issues
+```
 
-- **Entry Point**: `src/main.ts` mounts the main App component
+## Code Architecture
+
 - **Main Component**: `src/App.svelte` handles routing and renders page components
 - **Routing**: Custom hash-based router in `src/router.ts` using Svelte stores
 - **Data Layer**: Browser localStorage-based database with CRUD operations in `src/lib/db.ts`
-- **UI Pages**: Four main views in `src/pages/` for different entity management
+- **UI Pages**: Multiple views in `src/pages/` for different entity management
 
 ### Data Management
 The application uses a client-side database stored in localStorage:
