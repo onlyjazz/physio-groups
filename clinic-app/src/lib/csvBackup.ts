@@ -153,31 +153,9 @@ export async function exportBackupCSV(): Promise<void> {
   
   const csvContent = csvSections.join('\n')
   
-  // Modern browsers with file picker
-  if ('showSaveFilePicker' in window) {
-    try {
-      const fileHandle = await (window as any).showSaveFilePicker({
-        suggestedName: filename,
-        types: [{
-          description: 'Physio Groups CSV Backup Files',
-          accept: { 'text/csv': ['.csv'] }
-        }]
-      })
-      
-      const writable = await fileHandle.createWritable()
-      await writable.write(csvContent)
-      await writable.close()
-      
-      alert('שמור')
-      return
-    } catch (err: any) {
-      if (err.name === 'AbortError') return // User cancelled
-      console.error('File picker failed:', err)
-    }
-  }
-  
   // Fallback: regular download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
