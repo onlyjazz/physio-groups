@@ -11,8 +11,8 @@ let html = fs.readFileSync(htmlPath, 'utf-8');
 
 // Find and inline CSS files
 const cssRegex = /<link rel="stylesheet" crossorigin href="(.*?)">/g;
-let cssMatch;
-while ((cssMatch = cssRegex.exec(html)) !== null) {
+const cssMatches = [...html.matchAll(cssRegex)];
+for (const cssMatch of cssMatches) {
   const cssPath = path.join(__dirname, 'dist', cssMatch[1].replace(/^\//, ''));
   if (fs.existsSync(cssPath)) {
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
@@ -25,8 +25,8 @@ while ((cssMatch = cssRegex.exec(html)) !== null) {
 
 // Find and inline JavaScript files
 const jsRegex = /<script type="module" crossorigin src="(.*?)"><\/script>/g;
-let jsMatch;
-while ((jsMatch = jsRegex.exec(html)) !== null) {
+const jsMatches = [...html.matchAll(jsRegex)];
+for (const jsMatch of jsMatches) {
   const jsPath = path.join(__dirname, 'dist', jsMatch[1].replace(/^\//, ''));
   if (fs.existsSync(jsPath)) {
     const jsContent = fs.readFileSync(jsPath, 'utf-8');
