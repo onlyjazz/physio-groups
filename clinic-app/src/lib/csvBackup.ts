@@ -108,8 +108,9 @@ function parseCSVLine(line: string): string[] {
 
 /**
  * Export database as CSV files in a single text file
+ * remove the Promise<void> from the function signature
  */
-export async function exportBackupCSV(): Promise<void> {
+export  function exportBackupCSV(): void {
   // Get database directly from localStorage to avoid circular dependency
   const dbStr = localStorage.getItem('phizio-db-v1')
   if (!dbStr) {
