@@ -10,6 +10,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 100000000,
     cssCodeSplit: false,
     rollupOptions: {
+      input: 'src/index.html',
       output: {
         inlineDynamicImports: true
       }
