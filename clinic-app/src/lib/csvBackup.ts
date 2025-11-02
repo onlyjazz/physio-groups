@@ -119,15 +119,9 @@ export  function exportBackupCSV(): void {
   }
   
   const db: Db = JSON.parse(dbStr)
-  const filename = 'groupsdata.csv'
   
   // Create CSV content for each table
   const csvSections = []
-  
-  // Add metadata
-  csvSections.push('### PHYSIO-GROUPS-BACKUP-V1 ###')
-  csvSections.push(`### EXPORTED: ${new Date().toISOString()} ###`)
-  csvSections.push('')
   
   // Export each table
   const tables: Array<{ name: string; data: any[] }> = [
@@ -154,15 +148,18 @@ export  function exportBackupCSV(): void {
   
   const csvContent = csvSections.join('\n')
   
-  // Fallback: regular download
+  // Download
+  const filename = 'groupsdata'
   const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = filename
+  link.download = `${filename}.csv`
+  document.body.appendChild(link)
   link.click()
-  URL.revokeObjectURL(url)
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
   
   alert('שמור')
 }
@@ -172,11 +169,6 @@ export  function exportBackupCSV(): void {
  */
 export function importBackupCSV(csvContent: string): boolean {
   try {
-    // Validate file format
-    if (!csvContent.includes('### PHYSIO-GROUPS-BACKUP-V1 ###')) {
-      console.error('Invalid backup file format')
-      return false
-    }
     
     // Parse sections
     const sections = csvContent.split(/### TABLE: (\w+) ###/)

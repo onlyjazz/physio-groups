@@ -13,26 +13,15 @@
       reader.onload = (e) => {
         const content = e.target?.result as string
         
-        // Try CSV format first (new format)
-        if (file.name.endsWith('.csv')) {
-          if (importBackupCSV(content)) {
-            alert('נתונים נטענו בהצלחה!')
-            location.reload() // Refresh to show imported data
-          } else {
-            alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
-          }
-        } 
-        // Fallback to JSON format for backwards compatibility
-        else if (file.name.endsWith('.json')) {
+      // JSON format 
+      if (file.name.endsWith('.json')) {
           if (importBackup(content)) {
             alert('נתונים נטענו בהצלחה!')
             location.reload() // Refresh to show imported data
           } else {
             alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
           }
-        } else {
-          alert('פורמט קובץ לא נתמך. נא להעלות קובץ CSV או JSON.')
-        }
+        } 
       }
       reader.readAsText(file)
     }
@@ -43,6 +32,11 @@
   function triggerImport() {
     fileInput.click()
   }
+
+
+    function importBa(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+        throw new Error('Function not implemented.');
+    }
 </script>
 
 <nav class="bg-white shadow-md">
@@ -124,7 +118,7 @@
         
         <button 
           class="px-4 text-sm text-green-600 hover:text-green-700 hover:bg-white py-3 font-medium transition-colors" 
-          on:click={exportBackupCSV}
+          on:click={exportBackup}
         >
           שמירה
         </button>
