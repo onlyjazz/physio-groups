@@ -27,11 +27,7 @@ export function exportBackup(): void {
   if (canUsePicker) {
     (window as any)
       .showSaveFilePicker({
-        suggestedName: filename,
-        types: [{
-          description: 'Physio Groups Backup',
-          accept: { 'application/json': ['.json'] }
-        }]
+        suggestedName: filename
       })
       .then((fileHandle: any) => fileHandle.createWritable())
       .then((writable: any) => { writable.write(jsonContent); return writable; })
