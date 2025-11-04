@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from './router'
-  import { exportBackupCSV, importBackupCSV } from './lib/csvBackup'
   import { exportBackup, importBackup } from './lib/backup'
   
   let fileInput: HTMLInputElement
@@ -13,15 +12,15 @@
       reader.onload = (e) => {
         const content = e.target?.result as string
         
-      // JSON format 
-      if (file.name.endsWith('.json')) {
+      // JSON format  can have .json or .csv extension
+        if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
           if (importBackup(content)) {
             alert('נתונים נטענו בהצלחה!')
             location.reload() // Refresh to show imported data
           } else {
             alert('שגיאה בטעינת הנתונים. אנא בדק את הקובץ.')
           }
-        } 
+        }         
       }
       reader.readAsText(file)
     }

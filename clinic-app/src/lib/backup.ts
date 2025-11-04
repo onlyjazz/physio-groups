@@ -15,7 +15,8 @@ export function exportBackup(): void {
     return;
   }
 
-  const filename = 'groupsdata.json';
+  const filename = 'groupsdata.csv';
+  
   const BOM = '\uFEFF';
   const jsonContent = BOM + JSON.stringify(db, null, 2);
   const blob = new Blob([jsonContent], { type: 'text/csv;charset=utf-8' });
@@ -61,7 +62,6 @@ export function importBackup(jsonString: string): boolean {
     }
 
     localStorage.setItem('phizio-db-v1', jsonString);
-    alert('הנתונים שוחזרו בהצלחה');
     return true;
   } catch (error) {
     console.error('Import backup error:', error);

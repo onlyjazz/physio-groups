@@ -92,9 +92,13 @@ MacOs:  use local MBP
 - npm run dev on localhost:5172 
 
 ## Conclusion
-
+- Test passed. Removed duplicate alert in Nav and backup.ts. Enabled user to choose .csv or .json file type in Nav.
+- saves csv to downloads
+- successfully opens csv file and restores the database
 
 ## Findings
+- not having a file picker is a UX issue and a blocker for saving on the shared folder
+- not being able to save to the shared folder means we cannot verify that the save backup to csv will actually work in production
 
 ## Next Steps
 - How can we add a file picker to enable user to save file to the shared folder? 
