@@ -58,3 +58,43 @@ After removing the description:
 ## Findings
 - Single file index.html saves without presenting a file picker
 - npm run dev on localhost:5172 shows file picker
+
+
+# 4-Nov-2025
+# Case 2 Mitigate file type issue
+## Issue
+Windows may block saving files with a specific file type if the file type is not recognized by the system.
+We already know that the MS Exchange server blacklists .json files.
+
+## Code changes
+- Lines 18-21
+ const filename = 'groupsdata.csv';
+  const BOM = '\uFEFF';
+  const jsonContent = BOM + JSON.stringify(db, null, 2);
+  const blob = new Blob([jsonContent], { type: 'text/csv;charset=utf-8' });
+
+## Test Setup
+Windows: use apponfly windows vm
+MacOs:  use local MBP
+
+# Branch: feature-save-json-with-csv-file-extension
+
+# Test protocol
+- save and open
+- verify file can be opened and properly imported to restore the database
+
+## Results
+### Windows:
+- Single file index.html 
+
+### MacOS:
+- Single file index.html 
+- npm run dev on localhost:5172 
+
+## Conclusion
+
+
+## Findings
+
+## Next Steps
+- How can we add a file picker to enable user to save file to the shared folder? 

@@ -18,7 +18,7 @@ export function exportBackup(): void {
   const filename = 'groupsdata.json';
   const BOM = '\uFEFF';
   const jsonContent = BOM + JSON.stringify(db, null, 2);
-  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const blob = new Blob([jsonContent], { type: 'text/csv;charset=utf-8' });
 
   const canUsePicker =
     typeof (window as any).showSaveFilePicker === 'function' &&
