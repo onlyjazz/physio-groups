@@ -104,20 +104,66 @@ MacOs:  use local MBP
 - Since the Windows workstation we used for testing in the clinic supports file picker, we should be able to use it to save to the shared folder however there is a potential issue. The Windows workstation doesn't seem to default associate Chrome with HTML files. After you change attributes
 to default open HTML files with Chrome, the next day it seems to revert to open with Edge by default
 
-- Make Default association link for the app to open with Chrome in shared folder
+- Make a batch file to run the app with Chrome - see Case 5
 
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files "\\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל\groupapp.html"
+# Case 3
+# Issue
+- Tested with Talyak login and see that there are 2 issues
+- File association defaults back to Edge after logout and login
+- File picker opens but  Save to shared folder doesn't persist and defaults to Documents\Downloads
+
+# Next Steps
+- Investigate setting a batch file to run the app with Chrome (Case 5)
+- Investigate persisting the file picker location (Case 4)
+
+# Case 4
+## Issue
+- File picker opens but  Save to shared folder doesn't persist and defaults to Documents\Downloads
+
+
+## Code changes
+- Made exportBackup async and imported getLastBackupHandle/saveLastBackupHandle from ./idb.
+-  On save, load last FileSystemFileHandle from IndexedDB to seed the picker (startIn) and suggestedName; after user picks, persist the handle to IndexedDB and the name to localStorage (backup.lastSuggestedName).
+-  Added stable picker id ('physio-backup-save'); kept the download fallback and now also updates backup.lastSuggestedName there.
+
+## Test Setup
+Apponfly Windows: use apponfly windows vm
+Clinic Windows: clinic workstation with Talyak login
+MacOs:  use local MBP
+
+## Branch: feature-experiment-persist-file-handle
+
+## Test protocol
+- save and open
+- see if the browser opens a file picker or remembers a non Downloads folder
+
+## Test Results
+### Apponfly Windows:
+- Single file index.html : 
+- Chrome
+- Edge
+
+### Clinic Windows:
+- Single file index.html : 
+- Edge: 
+
+### MacOS:
+- Single file index.html : Open file picker for restore, doesn't open file picker for save (FAIL)
+- npm run dev on localhost:5172 : Open file picker for restore and save Chrome, persists the save location (PASS)
+
+## Next Steps
+- Since the Windows workstation we used for testing in the clinic supports file picker, we should be able to use it to save to the shared folder however there is a potential issue. The Windows workstation doesn't seem to default associate Chrome with HTML files. After you change attributes
+to default open HTML files with Chrome, the next day it seems to revert to open with Edge by default
+
 
 ---
-
-### 💡 Why it works perfectly in the shared folder
+# Case 5
+### 💡 run app with Chrome in a batch file
 
 * Everyone already has read access to `\\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל`.
 * The shortcut target (UNC path to `groupapp.html`) is the *same* for every workstation.
 * So if you drop **`Physiotherapy App (Chrome).lnk`** in that shared folder, everyone can just double-click it — no installation, no drive letter issues.
-
 ---
-
 ### 🪄 How to set it up once
 
 1. From any Windows machine with Chrome:
@@ -147,3 +193,19 @@ to default open HTML files with Chrome, the next day it seems to revert to open 
 4. Everyone else can now open the app by double-clicking that shortcut — it’ll always launch in Chrome with `--allow-file-access-from-files`.
 
 ---
+## Test protocol
+- save batch file
+
+## Test Results
+### Apponfly Windows:
+- Create on desktop, move to shared folder
+- Associate file with Edge
+- Run batch file and test if it opens with Chrome
+
+### Clinic Windows:
+- Single file index.html : Chrome: Opens file picker for restore and save to shared folder.
+- Edge: doesn't open file picker for save- Create on desktop, move to shared folder
+- Associate file with Edge
+- Run batch file and test if it opens with Chrome
+
+## Next steps
