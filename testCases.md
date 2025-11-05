@@ -61,44 +61,89 @@ After removing the description:
 
 
 # 4-Nov-2025
+# Rev 4
 # Case 2 Mitigate file type issue
 ## Issue
 Windows may block saving files with a specific file type if the file type is not recognized by the system.
 We already know that the MS Exchange server blacklists .json files.
 
 ## Code changes
-- Lines 18-21
+- Removed duplicate alert in Nav and backup.ts. Enabled user to choose .csv or .json file type in Nav.
+- Lines 18-21 changed filename and mime type.
  const filename = 'groupsdata.csv';
   const BOM = '\uFEFF';
   const jsonContent = BOM + JSON.stringify(db, null, 2);
   const blob = new Blob([jsonContent], { type: 'text/csv;charset=utf-8' });
 
 ## Test Setup
-Windows: use apponfly windows vm
+Apponfly Windows: use apponfly windows vm
+Clinic Windows: clinic workstation with Talyak login
 MacOs:  use local MBP
 
-# Branch: feature-save-json-with-csv-file-extension
+## Branch: feature-save-json-with-csv-file-extension
 
-# Test protocol
+## Test protocol
 - save and open
 - verify file can be opened and properly imported to restore the database
+- see if the browser opens a file picker or remembers a non Downloads folder
 
-## Results
-### Windows:
-- Single file index.html 
+## Test Results
+### Apponfly Windows:
+- Single file index.html : Open file picker for restore, doesn't open file picker for save. Always saves to Downloads folder.
+- Same behavior in Chrome and Edge
+
+### Clinic Windows:
+- Single file index.html : Chrome: Opens file picker for restore and save to shared folder.
+- Edge: doesn't open file picker for save
 
 ### MacOS:
-- Single file index.html 
-- npm run dev on localhost:5172 
-
-## Conclusion
-- Test passed. Removed duplicate alert in Nav and backup.ts. Enabled user to choose .csv or .json file type in Nav.
-- saves csv to downloads
-- successfully opens csv file and restores the database
-
-## Findings
-- not having a file picker is a UX issue and a blocker for saving on the shared folder
-- not being able to save to the shared folder means we cannot verify that the save backup to csv will actually work in production
+- Single file index.html : Open file picker for restore, doesn't open file picker for save
+- npm run dev on localhost:5172 : Open file picker for restore and save Chrome, doesn't open file picker for save Safari
 
 ## Next Steps
-- How can we add a file picker to enable user to save file to the shared folder? 
+- Since the Windows workstation we used for testing in the clinic supports file picker, we should be able to use it to save to the shared folder however there is a potential issue. The Windows workstation doesn't seem to default associate Chrome with HTML files. After you change attributes
+to default open HTML files with Chrome, the next day it seems to revert to open with Edge by default
+
+- Make Default association link for the app to open with Chrome in shared folder
+
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files "\\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל\groupapp.html"
+
+---
+
+### 💡 Why it works perfectly in the shared folder
+
+* Everyone already has read access to `\\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל`.
+* The shortcut target (UNC path to `groupapp.html`) is the *same* for every workstation.
+* So if you drop **`Physiotherapy App (Chrome).lnk`** in that shared folder, everyone can just double-click it — no installation, no drive letter issues.
+
+---
+
+### 🪄 How to set it up once
+
+1. From any Windows machine with Chrome:
+   * Right-click on the desktop → **New → Shortcut**
+   * In the location field, paste:
+
+     ```
+     "C:\Program Files\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files "\\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל\groupapp.html"
+     ```
+
+   * Click **Next**, name it
+
+     ```
+     Physiotherapy App (Chrome)
+     ```
+
+   * Click **Finish**.
+
+2. Right-click the new shortcut → **Properties → Change Icon** → pick the Chrome icon if you want.
+
+3. Copy that `.lnk` file into the shared folder:
+
+   ```
+   \\mrnt9428\Apps$\ClinicShare\phiziodocs\קבוצות מחוץ לסל\
+   ```
+
+4. Everyone else can now open the app by double-clicking that shortcut — it’ll always launch in Chrome with `--allow-file-access-from-files`.
+
+---
