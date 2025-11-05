@@ -1,6 +1,7 @@
 import type { Db } from './db';
+import { getLastBackupHandle, saveLastBackupHandle } from './idb';
 
-export function exportBackup(): void {
+export async function exportBackup(): Promise<void> {
   const dbStr = localStorage.getItem('phizio-db-v1');
   if (!dbStr) {
     alert('אין נתונים לגיבוי');
@@ -15,7 +16,10 @@ export function exportBackup(): void {
     return;
   }
 
-  const filename = 'groupsdata.csv';
+  const defaultFilename = 'groupsdata.csv';
+  const LAST_BACKUP_NAME_KEY = 'backup.lastSuggestedName';
+  const pickerId = 'physio-backup-save';
+  const lastSuggestedName = localStorage.getItem(LAST_BACKUP_NAME_KEY) || defaultFilename;
   
   const BOM = '\uFEFF';
   const jsonContent = BOM + JSON.stringify(db, null, 2);
@@ -26,11 +30,32 @@ export function exportBackup(): void {
     !window.location.href.startsWith('file:');
 
   if (canUsePicker) {
+    // Try to restore last handle (directory/file) from IndexedDB to seed picker location
+    let startIn: any = undefined;
+    let suggestedName = lastSuggestedName;
+    try {
+      const lastHandle = await getLastBackupHandle();
+      if (lastHandle) {
+        // Use previous file's directory (browsers typically interpret startIn=fileHandle as its parent directory)
+        startIn = lastHandle;
+        suggestedName = (lastHandle as any).name || suggestedName;
+      }
+    } catch {}
+
     (window as any)
       .showSaveFilePicker({
-        suggestedName: filename
+        suggestedName,
+        id: pickerId,
+        ...(startIn ? { startIn } : {})
       })
-      .then((fileHandle: any) => fileHandle.createWritable())
+      .then(async (fileHandle: any) => {
+        try {
+          // Persist handle for next time (Chromium browsers)
+          await saveLastBackupHandle(fileHandle);
+          localStorage.setItem(LAST_BACKUP_NAME_KEY, fileHandle?.name || suggestedName);
+        } catch {}
+        return fileHandle.createWritable();
+      })
       .then((writable: any) => { writable.write(jsonContent); return writable; })
       .then((writable: any) => writable.close())
       .then(() => alert('שמור'))
@@ -41,7 +66,8 @@ export function exportBackup(): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = lastSuggestedName;
+    try { localStorage.setItem(LAST_BACKUP_NAME_KEY, lastSuggestedName); } catch {}
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
