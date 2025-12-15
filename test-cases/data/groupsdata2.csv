@@ -25,13 +25,6 @@
       "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
     },
     {
-      "id": "67f69878-eaa2-4362-8f7d-1ca327f10459",
-      "name": "אלינור תל אביב",
-      "createdAt": 1761477968068,
-      "updatedAt": 1762236200425,
-      "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
-    },
-    {
       "id": "ebb2b13e-9dd3-4399-9abe-9d7ffc230684",
       "name": "שירה תמם",
       "createdAt": 1761554486919,
@@ -64,6 +57,13 @@
       "name": "עדי",
       "createdAt": 1761555927681,
       "updatedAt": 1761555927681,
+      "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
+    },
+    {
+      "id": "9094d175-4e1e-4ad1-9c1d-58ef3690edbb",
+      "name": "אלינור",
+      "createdAt": 1762236251108,
+      "updatedAt": 1762236251108,
       "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
     }
   ],
@@ -6268,14 +6268,6 @@
       "groupId": "4597aee0-36f0-4048-a175-5903fcd5569b",
       "createdAt": 1761560574538,
       "updatedAt": 1761560574538,
-      "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
-    },
-    {
-      "id": "382bbbff-9746-4b5b-a541-387d77f37ae4",
-      "therapistId": "67f69878-eaa2-4362-8f7d-1ca327f10459",
-      "groupId": "c8d1e02a-30e6-4197-9d43-8b5d3b8898a9",
-      "createdAt": 1761561693154,
-      "updatedAt": 1761561693154,
       "statusId": "fd02dbdd-7dd7-48b7-b335-e358850e4824"
     }
   ],

@@ -24,12 +24,17 @@ export async function exportBackup(): Promise<void> {
   const BOM = '\uFEFF';
   const jsonContent = BOM + JSON.stringify(db, null, 2);
   const blob = new Blob([jsonContent], { type: 'text/csv;charset=utf-8' });
-
-  const canUsePicker =
+/*
+  let canUsePicker =
     typeof (window as any).showSaveFilePicker === 'function' &&
     !window.location.href.startsWith('file:');
-
-  if (canUsePicker) {
+*/
+  let canUsePicker = true;
+console.log('canUsePicker', canUsePicker);
+console.log('window.location.href', window.location.href);
+console.log('window.location.href.startsWith("file:")', window.location.href.startsWith('file:'));
+console.log('window.location.href.startsWith("http:")', window.location.href.startsWith('http:'));
+   if (canUsePicker) {
     // Try to restore last handle (directory/file) from IndexedDB to seed picker location
     let startIn: any = undefined;
     let suggestedName = lastSuggestedName;
