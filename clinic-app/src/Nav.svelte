@@ -1,8 +1,11 @@
 <script lang="ts">
   import { goto } from './router'
   import { exportBackup, importBackup } from './lib/backup'
+  import { load, api } from './lib/db'
   
   let fileInput: HTMLInputElement
+  let db = load()
+  let clinicName = (db.settings && db.settings[0]?.clinicName) || 'ניהול קבוצות מחוץ לסל - מרפאת פיזיותרפיה עזריאלי מודיעין'
   
   function handleImport(event: Event) {
     const target = event.target as HTMLInputElement
@@ -31,18 +34,13 @@
   function triggerImport() {
     fileInput.click()
   }
-
-
-    function importBa(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
-        throw new Error('Function not implemented.');
-    }
 </script>
 
 <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
   <!-- First row: Logo and title -->
   <div class="border-b border-gray-200">
     <div class="container px-4 h-14 flex items-center justify-end">
-      <span class="text-sm text-gray-600 ml-3 whitespace-nowrap font-normal">ניהול קבוצות מחוץ לסל - מרפאת פיזיותרפיה עזריאלי מודיעין</span>
+      <span class="text-sm text-gray-600 ml-3 whitespace-nowrap font-normal">{clinicName}</span>
       <svg class="h-9 ml-6" viewBox="0 0 120 34" width="120" height="34" xmlns="http://www.w3.org/2000/svg">
         <style type="text/css">
           .st0{fill-rule:evenodd;clip-rule:evenodd;fill:#00A651;}
@@ -128,6 +126,14 @@
           on:click={triggerImport}
         >
           טעינה
+        </button>
+        <div class="h-6 w-px bg-gray-300"></div>
+        
+        <button 
+          class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 
+          on:click={() => goto('/settings')}
+        >
+          הגדרות
         </button>
       </div>
     </div>

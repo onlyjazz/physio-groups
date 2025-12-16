@@ -21,6 +21,13 @@ export interface PatientPayment {
   updatedAt: number;
 }
 
+export interface Settings {
+  id: ID;
+  clinicName: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Db {
   statuses: Status[]
   therapists: Therapist[]
@@ -30,6 +37,7 @@ export interface Db {
   therapistsInGroups: TherapistsInGroups[]
   attendance: Attendance[]
   patientPayments: PatientPayment[]
+  settings: Settings[]
 }
 
 const KEY = 'phizio-db-v1'
@@ -39,7 +47,14 @@ function uid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().
 export function load(): Db {
   const raw = localStorage.getItem(KEY)
   if (raw) {
-    const parsed = JSON.parse(raw)
+    let parsed: any
+    try {
+      parsed = JSON.parse(raw)
+    } catch (e) {
+      console.error('Failed to parse local DB, re-seeding...', e)
+      localStorage.removeItem(KEY)
+      return load()
+    }
     // Handle migration: add attendance array if missing
     if (!parsed.attendance) {
       parsed.attendance = []
@@ -47,6 +62,17 @@ export function load(): Db {
     // Handle migration: add patientPayments array if missing
     if (!parsed.patientPayments) {
       parsed.patientPayments = []
+    }
+    // Handle migration: add settings array if missing
+    if (!parsed.settings) {
+      const now = Date.now()
+      parsed.settings = [{
+        id: uid(),
+        clinicName: 'ניהול קבוצות מחוץ לסל - מרפאת פיזיותרפיה עזריאלי מודיעין',
+        createdAt: now,
+        updatedAt: now
+      }]
+      localStorage.setItem(KEY, JSON.stringify(parsed))
     }
     // Handle migration: add enrolled field to existing patientsInGroups
     if (parsed.patientsInGroups) {
@@ -79,6 +105,12 @@ export function load(): Db {
   const now = Date.now()
   const active: Status = { id: uid(), code: 'active' }
   const inactive: Status = { id: uid(), code: 'inactive' }
+  const settings: Settings = {
+    id: uid(),
+    clinicName: 'ניהול קבוצות מחוץ לסל - מרפאת פיזיותרפיה עזריאלי מודיעין',
+    createdAt: now,
+    updatedAt: now
+  }
   const seed: Db = {
     statuses: [active, inactive],
     therapists: [],
@@ -87,7 +119,8 @@ export function load(): Db {
     patientsInGroups: [],
     therapistsInGroups: [],
     attendance: [],
-    patientPayments: []
+    patientPayments: [],
+    settings: [settings]
   }
   localStorage.setItem(KEY, JSON.stringify(seed))
   return seed
@@ -382,6 +415,28 @@ export const api = {
       pig.enrolled === 1 &&
       api.hasActiveSubscription(db, pig.patientId, groupId)
     )
+  },
+  
+  // Settings operations
+  getSettings(db: Db): Settings | undefined {
+    return db.settings[0]
+  },
+  
+  updateSettings(db: Db, patch: Partial<Omit<Settings, 'id'>>) {
+    if (!db.settings[0]) {
+      // Create if doesn't exist
+      const now = Date.now()
+      db.settings.push({
+        id: uid(),
+        clinicName: '',
+        createdAt: now,
+        updatedAt: now,
+        ...patch
+      })
+    } else {
+      Object.assign(db.settings[0], patch, { updatedAt: Date.now() })
+    }
+    save(db)
   }
 }
 

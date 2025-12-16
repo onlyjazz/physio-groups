@@ -109,7 +109,7 @@ export function validateDb(db: any): boolean {
 
   const requiredFields = [
     'statuses', 'therapists', 'patients', 'groups',
-    'patientsInGroups', 'therapistsInGroups', 'attendance', 'patientPayments'
+    'patientsInGroups', 'therapistsInGroups', 'attendance', 'patientPayments', 'settings'
   ];
 
   for (const field of requiredFields) {
