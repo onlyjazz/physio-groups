@@ -263,7 +263,7 @@
           {/if}
         </button>
         <button 
-          class="text-gray-700 text-center font-semibold text-sm py-1 px-2 flex items-center justify-center"
+          class="text-gray-700  font-semibold text-sm text-center"
           on:click={() => sortBy('therapist')}
         >
           <span>מנחה</span>
@@ -274,7 +274,7 @@
           {/if}
         </button>
         <button 
-          class="text-gray-700 text-center font-semibold text-sm py-1 px-2 flex items-center justify-center"
+          class="text-gray-700 text-center font-semibold text-sm  text-center"
           on:click={() => sortBy('when')}
         >
           <span>מתי</span>
@@ -285,10 +285,10 @@
           {/if}
         </button>
         <button 
-          class="text-gray-700 text-center font-semibold text-sm py-1 px-2 flex items-center justify-center"
+          class="text-gray-700 font-semibold text-right px-2 text-sm"
           on:click={() => sortBy('name')}
         >
-          <span>שם קבוצה</span>
+          <span> שם הקבוצה</span>
           {#if sortField === 'name'}
             <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
@@ -296,7 +296,7 @@
           {/if}
         </button>
       </div>
-      <div class="flex gap-1 min-w-[90px] justify-end">
+      <div class="flex gap-1 w-60">
         <!-- Empty space for action buttons column -->
       </div>
     </div>
@@ -316,7 +316,7 @@
                   style="min-width: 150px; width: 200px;"
                   bind:value={editingTherapistId}
                   dir="rtl"
-                >
+                > 
                   <option value="">בחר מנחה</option>
                   {#each db.therapists as therapist}
                     <option value={therapist.id}>{therapist.name}</option>
@@ -334,7 +334,7 @@
                 <!-- Group name (under group name header, takes remaining space) -->
                 <input 
                   type="text"
-                  class="border rounded px-3 py-1 text-sm text-center font-medium"
+                  class="border rounded px-3 py-1 text-sm text-right font-medium"
                   style="flex: 1;"
                   bind:value={editingName}
                   dir="rtl"
@@ -354,7 +354,7 @@
                 <div class="text-gray-600 text-center">
                   <span class="font-medium">{g.when}</span>
                 </div>
-                <div class="text-gray-900 text-center">
+                <div class="text-gray-900 text-right">
                   <span class="font-medium">{g.name}</span>
                 </div>
               </div>

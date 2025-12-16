@@ -156,6 +156,23 @@ button:focus-visible {
   background-color: #ea580c;
 }
 
+#app {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  width: 100%;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

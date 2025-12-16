@@ -1,6 +1,7 @@
 <script lang="ts">
   import { route } from './router'
   import Nav from './Nav.svelte'
+  import PageWrapper from './PageWrapper.svelte'
   import Therapists from './pages/Therapists.svelte'
   import Patients from './pages/Patients.svelte'
   import Groups from './pages/Groups.svelte'
@@ -36,7 +37,9 @@ import Indicators from './pages/Indicators.svelte'
 </script>
 
 <Nav />
-<main class="container px-4 py-6">
-  <svelte:component this={Comp} />
-</main>
+<div class="pt-[120px] min-h-screen w-full">
+  <PageWrapper>
+    <svelte:component this={Comp} />
+  </PageWrapper>
+</div>
 

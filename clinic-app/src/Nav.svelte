@@ -38,7 +38,7 @@
     }
 </script>
 
-<nav class="bg-white shadow-md">
+<nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
   <!-- First row: Logo and title -->
   <div class="border-b border-gray-200">
     <div class="container px-4 h-14 flex items-center justify-end">
@@ -65,7 +65,7 @@
   
   <!-- Second row: Navigation menu -->
   <div class="bg-gray-50">
-    <div class="container px-4 h-12 flex items-center justify-center">
+    <div class="container px-4 h-12 flex items-center justify-end">
       <div class="flex items-center">
         <button 
           class="px-4 text-sm text-gray-700 hover:text-blue-600 hover:bg-white py-3 transition-colors" 

@@ -165,11 +165,14 @@
   }
 </script>
 
-<div class="mx-auto max-w-7xl">
-  <h1 class="text-2xl font-bold mb-6 text-right">ריכוז חודשי לקבוצות</h1>
-  
-  {#if !showReport}
-    <div class="bg-white rounded-lg shadow p-6">
+<section class="space-y-6">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-center mb-4">
+      <div></div>
+      <h2 class="text-lg font-semibold">ריכוז חודשי לקבוצות</h2>
+    </div>
+    
+    {#if !showReport}
       <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2 text-right" for="year-input">שנה</label>
@@ -215,9 +218,8 @@
           הצג דוח
         </button>
       </div>
-    </div>
-  {:else}
-    <div class="mb-4 flex gap-2 justify-end print:hidden">
+    {:else}
+      <div class="mb-4 flex gap-2 justify-end print:hidden">
       <button
         on:click={() => { showReport = false }}
         class="big-gray-button"
@@ -288,8 +290,9 @@
         {/each}
       {/if}
     </div>
-  {/if}
-</div>
+    {/if}
+  </div>
+</section>
 
 <style>
   @media print {

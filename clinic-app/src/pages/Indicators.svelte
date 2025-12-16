@@ -113,8 +113,12 @@
   })()
 </script>
 
-<div class="p-4 max-w-6xl mx-auto">
-  <h1 class="text-2xl font-bold mb-6 text-center">מדדים</h1>
+<section class="space-y-6">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-center mb-4">
+      <div></div>
+      <h2 class="text-lg font-semibold">מדדים</h2>
+    </div>
   
   <!-- Main Statistics Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -247,4 +251,5 @@
   <div class="text-center text-sm text-gray-500 mt-4">
     עדכון אחרון: {new Date().toLocaleTimeString('he-IL')}
   </div>
-</div>
+  </div>
+</section>

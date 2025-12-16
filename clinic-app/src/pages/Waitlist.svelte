@@ -227,10 +227,13 @@
         </div>
         <div class="flex-1 min-w-0">
           <button 
-            class="py-1 px-2 inline-flex items-center"
+            class="py-1 px-2 inline-flex"
             on:click={() => sort('name')}
           >
-            <span class="text-gray-700 font-semibold text-sm">פרטי מטופל</span>
+        <div class="flex gap-1 w-100">
+          <!-- Empty space for action buttons column -->
+        </div>
+          <span class="text-gray-700 font-semibold text-sm whitespace-nowrap">פרטי מטופל</span>
             {#if sortColumn === 'name'}
               <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}></path>
@@ -238,9 +241,7 @@
             {/if}
           </button>
         </div>
-        <div class="flex gap-1 min-w-[80px] justify-end">
-          <!-- Empty space for action buttons column -->
-        </div>
+
       </div>
       
       <div class="space-y-2">
@@ -254,7 +255,7 @@
                 year: '2-digit'
               })}
             </div>
-            <div class="text-sm text-center" style="width: 50px;">
+            <div class="text-sm text-right" style="width: 50px;">
               <span class="font-semibold"
                     class:text-red-600={item.available <= 0} 
                     class:text-orange-500={item.available > 0 && item.available <= 3}
@@ -266,7 +267,7 @@
               {item.groupName}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-gray-900 text-left px-2">
+              <div class="text-gray-900 text-right px-2">
                 <span class="font-medium">{item.patient.firstName} {item.patient.lastName}</span>
                 <span class="text-gray-600 text-sm mr-3">ת.ז. {item.patient.nationalId}</span>
                 <span class="text-gray-600 text-sm">טל. {item.patient.phone}</span>
